@@ -4,10 +4,12 @@
 
 #include "libyarattd_types.h"
 
-int init_scan_cursors(YR_TTD_SCHEDULER* scheduler, char** scan_cursor_arg);
-int init_scan_functions(YR_TTD_SCHEDULER* scheduler, char** scan_function_arg);
+int init_scan_cursors(YR_TTD_SCHEDULER* scheduler, wchar_t** scan_cursor_arg);
+int init_scan_functions(
+    YR_TTD_SCHEDULER* scheduler,
+    wchar_t** scan_function_arg);
 int init_scan_default(YR_TTD_SCHEDULER* scheduler);
-int init_virtual_alloc_mode(YR_TTD_SCHEDULER* scheduler);
+int init_virtual_alloc_mode(YR_TTD_SCHEDULER* scheduler, wchar_t* cache_file);
 
 int scheduler_init(
     YR_TTD_SCHEDULER** out,

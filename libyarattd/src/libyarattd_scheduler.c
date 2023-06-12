@@ -5,7 +5,7 @@
 #include "libyarattd_utils.h"
 #include "libyarattd_virtual_alloc.h"
 
-int init_scan_cursors(YR_TTD_SCHEDULER* scheduler, char** scan_cursor_arg)
+int init_scan_cursors(YR_TTD_SCHEDULER* scheduler, wchar_t** scan_cursor_arg)
 {
   if (!scheduler->cursors)
     return ERROR_INTERNAL_FATAL_ERROR;
@@ -19,39 +19,32 @@ int init_scan_cursors(YR_TTD_SCHEDULER* scheduler, char** scan_cursor_arg)
     if (!scan_cursor)
       return ERROR_INTERNAL_FATAL_ERROR;
 
-    char* end;
-    scan_cursor->major = strtoull(scan_cursor_arg[i], &end, 16);
-    scan_cursor->minor = strtoull(end + 1, NULL, 16);
+    wchar_t* end;
+    scan_cursor->major = wcstoull(scan_cursor_arg[i], &end, 16);
+    scan_cursor->minor = wcstoull(end + 1, NULL, 16);
     TRY(scheduler_add_cursor(scheduler, scan_cursor, L"yara-ttd -T"));
   }
 
   return ERROR_SUCCESS;
 }
 
-int init_scan_functions(YR_TTD_SCHEDULER* scheduler, char** scan_function_arg)
+int init_scan_functions(YR_TTD_SCHEDULER* scheduler, wchar_t** scan_functions)
 {
   if (!scheduler->functions || !scheduler->cursors)
     return ERROR_INTERNAL_FATAL_ERROR;
 
-  if (!scan_function_arg[0])
+  if (!scan_functions[0])
     return ERROR_SUCCESS;
 
-  for (int i = 0; scan_function_arg[i]; i++)
+  for (int i = 0; scan_functions[i]; i++)
   {
-    // convert to wchar_t
-    wchar_t* w_scan_function = (wchar_t*) yr_malloc(MAX_LENGTH_FUNCTION_NAME);
-    if (!w_scan_function)
-      return ERROR_INTERNAL_FATAL_ERROR;
-
-    mbstowcs(w_scan_function, scan_function_arg[i], MAX_LENGTH_FUNCTION_NAME);
-
     YR_TTD_FUNCTION* scan_function = (YR_TTD_FUNCTION*) yr_malloc(
         sizeof(YR_TTD_FUNCTION));
     if (!scan_function)
       return ERROR_INTERNAL_FATAL_ERROR;
 
     wchar_t* buffer = NULL;
-    scan_function->module = wcstok(w_scan_function, L"!", &buffer);
+    scan_function->module = wcstok(scan_functions[i], L"!", &buffer);
     scan_function->name = buffer;
 
     TRY(resolve_function_address(scheduler, scan_function));
@@ -149,7 +142,7 @@ int init_scan_default(YR_TTD_SCHEDULER* scheduler)
   return ERROR_SUCCESS;
 }
 
-int init_virtual_alloc_mode(YR_TTD_SCHEDULER* scheduler, char* cache_file)
+int init_virtual_alloc_mode(YR_TTD_SCHEDULER* scheduler, wchar_t* cache_file)
 {
   scheduler->virtual_alloc_map = (YR_TTD_VIRTUAL_ALLOC_MAP*) yr_malloc(
       sizeof(YR_TTD_VIRTUAL_ALLOC_MAP));
@@ -185,9 +178,9 @@ int scheduler_init(
     YR_TTD_SCHEDULER** out,
     const wchar_t* path,
     YR_TTD_SCAN_MODE scan_mode,
-    char** cursors,
-    char** functions,
-    char* cache_file)
+    wchar_t** cursors,
+    wchar_t** functions,
+    wchar_t* cache_file)
 {
   int result = ERROR_SUCCESS;
 

@@ -43,6 +43,6 @@ int build_virtual_alloc_map(YR_TTD_SCHEDULER* sch);
 
 int build_virtual_alloc_map_from_cache(
     YR_TTD_SCHEDULER* scheduler,
-    char* cache_file);
+    wchar_t* cache_file);
 
 #endif

@@ -114,13 +114,10 @@ int get_virtual_alloc_ranges(YR_TTD_ITERATOR_CTX* ctx)
 
 int build_virtual_alloc_map_from_cache(
     YR_TTD_SCHEDULER* scheduler,
-    char* cache_file)
+    wchar_t* cache_file)
 {
-  wchar_t cache_file_w[MAX_LENGTH_PATH];
-  mbstowcs(cache_file_w, cache_file, MAX_LENGTH_PATH);
-
   YR_FILE_DESCRIPTOR fd = CreateFile(
-      cache_file_w,
+      cache_file,
       GENERIC_READ,
       FILE_SHARE_READ | FILE_SHARE_WRITE,
       NULL,
