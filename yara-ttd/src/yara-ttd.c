@@ -72,7 +72,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 typedef struct _MODULE_DATA
 {
-  const char *module_name;
+  const wchar_t *module_name;
   YR_MAPPED_FILE mapped_file;
   struct _MODULE_DATA *next;
 
@@ -80,7 +80,7 @@ typedef struct _MODULE_DATA
 
 typedef struct _CALLBACK_ARGS
 {
-  const char_t *file_path;
+  const wchar_t *file_path;
   int current_count;
 
 } CALLBACK_ARGS;
@@ -96,7 +96,7 @@ typedef struct _THREAD_ARGS
 
 typedef struct _QUEUED_FILE
 {
-  char_t *path;
+  wchar_t *path;
 
 } QUEUED_FILE;
 
@@ -122,16 +122,16 @@ typedef struct SCAN_OPTIONS
 #define MAX_ARGS_SCAN_FUNCTION 32
 #define MAX_ARGS_SCAN_CURSOR   32
 
-static char *atom_quality_table;
-static char *tags[MAX_ARGS_TAG + 1];
-static char *identifiers[MAX_ARGS_IDENTIFIER + 1];
-static char *ext_vars[MAX_ARGS_EXT_VAR + 1];
-static char *modules_data[MAX_ARGS_MODULE_DATA + 1];
-static char *scan_functions[MAX_ARGS_SCAN_FUNCTION + 1];
-static char *scan_cursors[MAX_ARGS_SCAN_CURSOR + 1];
-static char *scan_functions_file;
-static char *scan_cursors_file;
-static char *cache_file;
+static wchar_t *atom_quality_table;
+static wchar_t *tags[MAX_ARGS_TAG + 1];
+static wchar_t *identifiers[MAX_ARGS_IDENTIFIER + 1];
+static wchar_t *ext_vars[MAX_ARGS_EXT_VAR + 1];
+static wchar_t *modules_data[MAX_ARGS_MODULE_DATA + 1];
+static wchar_t *scan_functions[MAX_ARGS_SCAN_FUNCTION + 1];
+static wchar_t *scan_cursors[MAX_ARGS_SCAN_CURSOR + 1];
+static wchar_t *scan_functions_file;
+static wchar_t *scan_cursors_file;
+static wchar_t *cache_file;
 
 static bool follow_symlinks = true;
 static bool recursive_search = false;
@@ -454,7 +454,7 @@ static void file_queue_finish()
   for (int i = 0; i < YR_MAX_THREADS; i++) cli_semaphore_release(&used_slots);
 }
 
-static int file_queue_put(const char_t *file_path, time_t deadline)
+static int file_queue_put(const wchar_t *file_path, time_t deadline)
 {
   if (cli_semaphore_wait(&unused_slots, deadline) == ERROR_SCAN_TIMEOUT)
     return ERROR_SCAN_TIMEOUT;
@@ -470,9 +470,9 @@ static int file_queue_put(const char_t *file_path, time_t deadline)
   return ERROR_SUCCESS;
 }
 
-static char_t *file_queue_get(time_t deadline)
+static wchar_t *file_queue_get(time_t deadline)
 {
-  char_t *result;
+  wchar_t *result;
 
   if (cli_semaphore_wait(&used_slots, deadline) == ERROR_SCAN_TIMEOUT)
     return NULL;
@@ -497,7 +497,7 @@ static char_t *file_queue_get(time_t deadline)
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 
-static bool is_directory(const char_t *path)
+static bool is_directory(const wchar_t *path)
 {
   DWORD attributes = GetFileAttributes(path);
 
@@ -508,10 +508,10 @@ static bool is_directory(const char_t *path)
     return false;
 }
 
-static int scan_dir(const char_t *dir, SCAN_OPTIONS *scan_opts)
+static int scan_dir(const wchar_t *dir, SCAN_OPTIONS *scan_opts)
 {
   int result = ERROR_SUCCESS;
-  char_t path[MAX_PATH];
+  wchar_t path[MAX_PATH];
 
   _sntprintf(path, MAX_PATH, _T("%s\\*"), dir);
 
@@ -635,9 +635,9 @@ static int scan_ttd(YR_SCANNER *scanner, const wchar_t *filename)
   return ERROR_SUCCESS;
 }
 
-static int populate_scan_list(const char_t *filename, SCAN_OPTIONS *scan_opts)
+static int populate_scan_list(const wchar_t *filename, SCAN_OPTIONS *scan_opts)
 {
-  char_t *context;
+  wchar_t *context;
   DWORD nread;
   int result = ERROR_SUCCESS;
 
@@ -669,7 +669,7 @@ static int populate_scan_list(const char_t *filename, SCAN_OPTIONS *scan_opts)
   }
 
   // INVALID_FILE_SIZE is 0xFFFFFFFF, so (+1) will not overflow
-  char_t *buf = (char_t *) VirtualAlloc(
+  wchar_t *buf = (wchar_t *) VirtualAlloc(
       NULL, fileSize + 1, MEM_COMMIT, PAGE_READWRITE);
 
   if (buf == NULL)
@@ -695,17 +695,17 @@ static int populate_scan_list(const char_t *filename, SCAN_OPTIONS *scan_opts)
     total += nread;
   }
 
-  char_t *path = _tcstok_s(buf, _T("\n"), &context);
+  wchar_t *path = wcstok_s(buf, L"\n", &context);
 
   while (result != ERROR_SCAN_TIMEOUT && path != NULL)
   {
     // Remove trailing carriage return, if present.
-    if (*path != '\0')
+    if (*path != L'\0')
     {
-      char_t *final = path + _tcslen(path) - 1;
+      wchar_t *final = path + wcslen(path) - 1;
 
-      if (*final == '\r')
-        *final = '\0';
+      if (*final == L'\r')
+        *final = L'\0';
     }
 
     if (is_directory(path))
@@ -723,7 +723,7 @@ static int populate_scan_list(const char_t *filename, SCAN_OPTIONS *scan_opts)
 
 #else
 
-static bool is_directory(const char *path)
+static bool is_directory(const wchar_t *path)
 {
   struct stat st;
 
@@ -733,7 +733,7 @@ static bool is_directory(const char *path)
   return 0;
 }
 
-static int scan_dir(const char *dir, SCAN_OPTIONS *scan_opts)
+static int scan_dir(const wchar_t *dir, SCAN_OPTIONS *scan_opts)
 {
   int result = ERROR_SUCCESS;
   DIR *dp = opendir(dir);
@@ -744,7 +744,7 @@ static int scan_dir(const char *dir, SCAN_OPTIONS *scan_opts)
 
     while (de && result != ERROR_SCAN_TIMEOUT)
     {
-      char full_path[MAX_PATH];
+      wchar_t full_path[MAX_PATH];
       struct stat st;
 
       snprintf(full_path, sizeof(full_path), "%s/%s", dir, de->d_name);
@@ -763,10 +763,10 @@ static int scan_dir(const char *dir, SCAN_OPTIONS *scan_opts)
       // skip it in that case.
       else if (S_ISLNK(st.st_mode))
       {
-        char buf[2];
+        wchar_t buf[2];
         int len = readlink(full_path, buf, sizeof(buf));
 
-        if (len == 1 && buf[0] == '.')
+        if (len == 1 && buf[0] == L'.')
         {
           de = readdir(dp);
           continue;
@@ -811,7 +811,7 @@ static int scan_dir(const char *dir, SCAN_OPTIONS *scan_opts)
   return result;
 }
 
-static int scan_file(YR_SCANNER *scanner, const char_t *filename)
+static int scan_file(YR_SCANNER *scanner, const wchar_t *filename)
 {
   YR_FILE_DESCRIPTOR fd = open(filename, O_RDONLY);
 
@@ -825,11 +825,11 @@ static int scan_file(YR_SCANNER *scanner, const char_t *filename)
   return result;
 }
 
-static int populate_scan_list(const char *filename, SCAN_OPTIONS *scan_opts)
+static int populate_scan_list(const wchar_t *filename, SCAN_OPTIONS *scan_opts)
 {
   size_t nsize = 0;
   ssize_t nread;
-  char *path = NULL;
+  wchar_t *path = NULL;
   int result = ERROR_SUCCESS;
 
   FILE *fh_scan_list = fopen(filename, "r");
@@ -844,9 +844,9 @@ static int populate_scan_list(const char *filename, SCAN_OPTIONS *scan_opts)
          (nread = getline(&path, &nsize, fh_scan_list)) != -1)
   {
     // remove trailing newline
-    if (nread && path[nread - 1] == '\n')
+    if (nread && path[nread - 1] == L'\n')
     {
-      path[nread - 1] = '\0';
+      path[nread - 1] = L'\0';
       nread--;
     }
 
@@ -983,13 +983,13 @@ static void print_scanner_error(YR_SCANNER *scanner, int error)
 
 static void print_compiler_error(
     int error_level,
-    const char *file_name,
+    const wchar_t *file_name,
     int line_number,
     const YR_RULE *rule,
-    const char *message,
+    const wchar_t *message,
     void *user_data)
 {
-  char *msg_type;
+  wchar_t *msg_type;
 
   if (error_level == YARA_ERROR_LEVEL_ERROR)
   {
@@ -1073,7 +1073,7 @@ static int handle_message(
     YR_RULE *rule,
     void *data)
 {
-  const char *tag;
+  const wchar_t *tag;
   bool show = true;
 
   if (tags[0] != NULL)
@@ -1354,7 +1354,7 @@ static void *scanning_thread(void *param)
   int result = ERROR_SUCCESS;
   THREAD_ARGS *args = (THREAD_ARGS *) param;
 
-  char_t *file_path = file_queue_get(args->deadline);
+  wchar_t *file_path = file_queue_get(args->deadline);
 
   while (file_path != NULL)
   {
@@ -1401,15 +1401,15 @@ static int load_modules_data()
 {
   for (int i = 0; modules_data[i] != NULL; i++)
   {
-    char *equal_sign = strchr(modules_data[i], '=');
+    wchar_t *equal_sign = wcschr(modules_data[i], L'=');
 
     if (!equal_sign)
     {
-      fprintf(stderr, "error: wrong syntax for `-x` option.\n");
+      fwprintf(stderr, L"error: wrong syntax for `-x` option.\n");
       return false;
     }
 
-    *equal_sign = '\0';
+    *equal_sign = L'\0';
 
     MODULE_DATA *module_data = (MODULE_DATA *) malloc(sizeof(MODULE_DATA));
 
@@ -1453,7 +1453,7 @@ static void unload_modules_data()
   modules_data_list = NULL;
 }
 
-int _tmain(int argc, const char_t **argv)
+int wmain(int argc, const wchar_t **argv)
 {
   COMPILER_RESULTS cr;
 
