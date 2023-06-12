@@ -31,9 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <io.h>
 #include <windows.h>
 
-#define PRIx64 "I64x"
-#define PRId64 "I64d"
-
 #include <ctype.h>
 #include <libyarattd_common.h>
 #include <libyarattd_scanner.h>
@@ -251,11 +248,7 @@ args_option_t options[] = {
         &follow_symlinks,
         L"do not follow symlinks when scanning"),
 
-    OPT_BOOLEAN(
-        'w',
-        L"no-warnings",
-        &ignore_warnings,
-        L"disable warnings"),
+    OPT_BOOLEAN('w', L"no-warnings", &ignore_warnings, L"disable warnings"),
 
     OPT_BOOLEAN(0, L"print-meta", &show_meta, L"print metadata"),
 
@@ -265,11 +258,7 @@ args_option_t options[] = {
         &show_module_data,
         L"print module data"),
 
-    OPT_BOOLEAN(
-        0,
-        L"module-names",
-        &show_module_names,
-        L"show module names"),
+    OPT_BOOLEAN(0, L"module-names", &show_module_names, L"show module names"),
 
     OPT_BOOLEAN(
         'e',
@@ -277,11 +266,7 @@ args_option_t options[] = {
         &show_namespace,
         L"print rules' namespace"),
 
-    OPT_BOOLEAN(
-        'S',
-        L"print-stats",
-        &show_stats,
-        L"print rules' statistics"),
+    OPT_BOOLEAN('S', L"print-stats", &show_stats, L"print rules' statistics"),
 
     OPT_BOOLEAN(
         's',
@@ -351,11 +336,7 @@ args_option_t options[] = {
         L"abort scanning after the given number of SECONDS",
         L"SECONDS"),
 
-    OPT_BOOLEAN(
-        'v',
-        L"version",
-        &show_version,
-        L"show version information"),
+    OPT_BOOLEAN('v', L"version", &show_version, L"show version information"),
 
     OPT_LONG(
         'm',
@@ -533,10 +514,10 @@ static int scan_dir(const wchar_t *dir, SCAN_OPTIONS *scan_opts)
         }
         else
         {
-          _ftprintf(
+          fwprintf(
               stderr,
-              _T("skipping %s (%" PRIu64
-                 " bytes) because it's larger than %lld bytes.\n"),
+              L"skipping %s (%I64u bytes) because it's larger than %lld "
+              L"bytes.\n",
               path,
               file_size.QuadPart,
               skip_larger);
@@ -657,9 +638,7 @@ static int populate_scan_list(const wchar_t *filename, SCAN_OPTIONS *scan_opts)
   if (fileSize == INVALID_FILE_SIZE)
   {
     fwprintf(
-        stderr,
-        L"error: could not determine size of file \"%s\".\n",
-        filename);
+        stderr, L"error: could not determine size of file \"%s\".\n", filename);
     CloseHandle(hFile);
     return ERROR_COULD_NOT_READ_FILE;
   }
@@ -783,7 +762,7 @@ static int scan_dir(const wchar_t *dir, SCAN_OPTIONS *scan_opts)
           {
             fprintf(
                 stderr,
-                "skipping %s (%" PRId64 " bytes) because it's larger than %lld"
+                "skipping %s (%I64d bytes) because it's larger than %lld"
                 " bytes.\n",
                 full_path,
                 st.st_size,
@@ -886,16 +865,16 @@ static void print_escaped(const uint8_t *data, size_t length)
     case '\"':
     case '\'':
     case '\\':
-      _tprintf(_T("\\%" PF_C), data[i]);
+      wprintf(L"\\%hc", data[i]);
       break;
 
     default:
       if (data[i] >= 127)
         wprintf(L"\\%03o", data[i]);
       else if (data[i] >= 32)
-        _tprintf(_T("%" PF_C), data[i]);
+        wprintf(L"%hc", data[i]);
       else if (cescapes[data[i]] != 0)
-        _tprintf(_T("\\%" PF_C), cescapes[data[i]]);
+        _tprintf(L"\\%hc", cescapes[data[i]]);
       else
         wprintf(L"\\%03o", data[i]);
     }
@@ -1035,8 +1014,7 @@ static void print_rules_stats(YR_RULES *rules)
     return;
   }
 
-  wprintf(
-      L"size of AC transition table        : %d\n", stats.ac_tables_size);
+  wprintf(L"size of AC transition table        : %d\n", stats.ac_tables_size);
 
   wprintf(
       L"average length of AC matches lists : %f\n",
@@ -1122,9 +1100,9 @@ static int handle_message(
     wprintf(L"%llx:%llx @ ", position->major, position->minor);
 
     if (show_namespace)
-      _tprintf(_T("%" PF_S ":"), rule->ns->name);
+      wprintf(L"%hs:", rule->ns->name);
 
-    _tprintf(_T("%" PF_S " "), rule->identifier);
+    wprintf(L"%hs ", rule->identifier);
 
     if (show_tags)
     {
@@ -1136,7 +1114,7 @@ static int handle_message(
         if (tag != rule->tags)
           wprintf(L",");
 
-        _tprintf(_T("%" PF_S), tag);
+        wprintf(L"%hs", tag);
       }
 
       wprintf(L"] ");
@@ -1157,18 +1135,16 @@ static int handle_message(
 
         if (meta->type == META_TYPE_INTEGER)
         {
-          _tprintf(_T("%" PF_S " =%" PRId64), meta->identifier, meta->integer);
+          wprintf(L"%hs =%PRI64d", meta->identifier, meta->integer);
         }
         else if (meta->type == META_TYPE_BOOLEAN)
         {
-          _tprintf(
-              _T("%" PF_S "=%" PF_S),
-              meta->identifier,
-              meta->integer ? "true" : "false");
+          wprintf(
+              L"%hs=%hs", meta->identifier, meta->integer ? "true" : "false");
         }
         else
         {
-          _tprintf(_T("%" PF_S "=\""), meta->identifier);
+          wprintf(L"%hs=\"", meta->identifier);
           print_escaped((uint8_t *) (meta->string), strlen(meta->string));
           wprintf(L"\"");
         }
@@ -1194,14 +1170,14 @@ static int handle_message(
           wprintf(L"%llx:%llx @ ", position->major, position->minor);
 
           if (show_string_length)
-            _tprintf(
-                _T("0x%" PRIx64 ":%d:%" PF_S),
+            wprintf(
+                "0x%I64x:%d:%hs",
                 match->base + match->offset,
                 match->data_length,
                 string->identifier);
           else
             _tprintf(
-                _T("0x%" PRIx64 ":%" PF_S),
+                L"0x%I64x:%hs",
                 match->base + match->offset,
                 string->identifier);
 
@@ -1334,7 +1310,7 @@ static int callback(
     return CALLBACK_CONTINUE;
 
   case CALLBACK_MSG_CONSOLE_LOG:
-    _tprintf(_T("%" PF_S "\n"), (wchar_t *) message_data);
+    wprintf(L"%hs\n", (wchar_t *) message_data);
     return CALLBACK_CONTINUE;
   }
 
