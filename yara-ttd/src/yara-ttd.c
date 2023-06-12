@@ -1171,7 +1171,7 @@ static int handle_message(
 
           if (show_string_length)
             wprintf(
-                "0x%I64x:%d:%hs",
+                L"0x%I64x:%d:%hs",
                 match->base + match->offset,
                 match->data_length,
                 string->identifier);
@@ -1395,7 +1395,7 @@ static int load_modules_data()
       {
         free(module_data);
 
-        fprintf(stderr, "error: could not open file \"%s\".\n", equal_sign + 1);
+        fwprintf(stderr, L"error: could not open file \"%s\".\n", equal_sign + 1);
 
         return false;
       }
