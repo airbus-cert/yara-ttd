@@ -37,12 +37,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "libyarattd_common.h"
 #include "libyarattd_unicode.h"
 
-#define args_is_long_arg(arg) (arg[0] == '-' && arg[1] == '-' && arg[2] != '\0')
+#define args_is_long_arg(arg) \
+  (arg[0] == L'-' && arg[1] == L'-' && arg[2] != L'\0')
 
 #define args_is_short_arg(arg) \
-  (arg[0] == '-' && arg[1] != '-' && arg[1] != '\0')
+  (arg[0] == L'-' && arg[1] != L'-' && arg[1] != L'\0')
 
-args_option_t* args_get_short_option(args_option_t* options, const char_t opt)
+args_option_t* args_get_short_option(args_option_t* options, const wchar_t opt)
 {
   while (options->type != ARGS_OPT_END)
   {
@@ -55,7 +56,7 @@ args_option_t* args_get_short_option(args_option_t* options, const char_t opt)
   return NULL;
 }
 
-args_option_t* args_get_long_option(args_option_t* options, const char_t* arg)
+args_option_t* args_get_long_option(args_option_t* options, const wchar_t* arg)
 {
   arg += 2;  // skip starting --
 
@@ -63,10 +64,10 @@ args_option_t* args_get_long_option(args_option_t* options, const char_t* arg)
   {
     if (options->long_name != NULL)
     {
-      size_t l = _tcslen(options->long_name);
+      size_t l = wcslen(options->long_name);
 
-      if ((arg[l] == '\0' || arg[l] == '=') &&
-          _tcsstr(arg, options->long_name) == arg)
+      if ((arg[l] == L'\0' || arg[l] == L'=') &&
+          wcsstr(arg, options->long_name) == arg)
       {
         return options;
       }
@@ -80,10 +81,10 @@ args_option_t* args_get_long_option(args_option_t* options, const char_t* arg)
 
 args_error_type_t args_parse_option(
     args_option_t* opt,
-    const char_t* opt_arg,
+    const wchar_t* opt_arg,
     int* opt_arg_was_used)
 {
-  char_t* endptr = NULL;
+  wchar_t* endptr = NULL;
 
   if (opt_arg_was_used != NULL)
     *opt_arg_was_used = 0;
@@ -101,9 +102,9 @@ args_error_type_t args_parse_option(
     if (opt_arg == NULL)
       return ARGS_ERROR_REQUIRED_INTEGER_ARG;
 
-    *(long*) opt->value = _tcstol(opt_arg, &endptr, 0);
+    *(long*) opt->value = wcstol(opt_arg, &endptr, 0);
 
-    if (*endptr != '\0')
+    if (*endptr != L'\0')
       return ARGS_ERROR_REQUIRED_INTEGER_ARG;
 
     if (opt_arg_was_used != NULL)
@@ -115,9 +116,9 @@ args_error_type_t args_parse_option(
     if (opt_arg == NULL)
       return ARGS_ERROR_REQUIRED_INTEGER_ARG;
 
-    *(long long*) opt->value = _tcstoll(opt_arg, &endptr, 0);
+    *(long long*) opt->value = wcstoll(opt_arg, &endptr, 0);
 
-    if (*endptr != '\0')
+    if (*endptr != L'\0')
       return ARGS_ERROR_REQUIRED_INTEGER_ARG;
 
     if (opt_arg_was_used != NULL)
@@ -129,17 +130,10 @@ args_error_type_t args_parse_option(
     if (opt_arg == NULL)
       return ARGS_ERROR_REQUIRED_STRING_ARG;
 
-#ifdef _UNICODE
     if (opt->max_count > 1)
-      ((const char**) opt->value)[opt->count] = unicode_to_ansi(opt_arg);
+      ((const wchar_t**) opt->value)[opt->count] = opt_arg;
     else
-      *(const char**) opt->value = unicode_to_ansi(opt_arg);
-#else
-    if (opt->max_count > 1)
-      ((const char**) opt->value)[opt->count] = opt_arg;
-    else
-      *(const char**) opt->value = opt_arg;
-#endif
+      *(const wchar_t**) opt->value = opt_arg;
 
     if (opt_arg_was_used != NULL)
       *opt_arg_was_used = 1;
@@ -155,31 +149,31 @@ args_error_type_t args_parse_option(
   return ARGS_ERROR_OK;
 }
 
-void args_print_error(args_error_type_t error, const char_t* option)
+void args_print_error(args_error_type_t error, const wchar_t* option)
 {
   switch (error)
   {
   case ARGS_ERROR_UNKNOWN_OPT:
-    _ftprintf(stderr, _T("unknown option `%s`\n"), option);
+    _ftprintf(stderr, L"unknown option `%s`\n", option);
     break;
   case ARGS_ERROR_TOO_MANY:
-    _ftprintf(stderr, _T("too many `%s` options\n"), option);
+    _ftprintf(stderr, L"too many `%s` options\n", option);
     break;
   case ARGS_ERROR_REQUIRED_INTEGER_ARG:
-    _ftprintf(stderr, _T("option `%s` requires an integer argument\n"), option);
+    _ftprintf(stderr, L"option `%s` requires an integer argument\n", option);
     break;
   case ARGS_ERROR_REQUIRED_STRING_ARG:
-    _ftprintf(stderr, _T("option `%s` requires a string argument\n"), option);
+    _ftprintf(stderr, L"option `%s` requires a string argument\n", option);
     break;
   case ARGS_ERROR_UNEXPECTED_ARG:
-    _ftprintf(stderr, _T("option `%s` doesn't expect an argument\n"), option);
+    _ftprintf(stderr, L"option `%s` doesn't expect an argument\n", option);
     break;
   default:
     return;
   }
 }
 
-int args_parse(args_option_t* options, int argc, const char_t** argv)
+int args_parse(args_option_t* options, int argc, const wchar_t** argv)
 {
   args_error_type_t error = ARGS_ERROR_OK;
 
@@ -188,7 +182,7 @@ int args_parse(args_option_t* options, int argc, const char_t** argv)
 
   while (i < argc)
   {
-    const char_t* arg = argv[i];
+    const wchar_t* arg = argv[i];
 
     if (args_is_long_arg(arg))
     {
@@ -196,7 +190,7 @@ int args_parse(args_option_t* options, int argc, const char_t** argv)
 
       if (opt != NULL)
       {
-        const char_t* equal = _tcschr(arg, '=');
+        const wchar_t* equal = wcschr(arg, L'=');
 
         if (equal)
           error = args_parse_option(opt, equal + 1, NULL);
@@ -266,34 +260,34 @@ int args_parse(args_option_t* options, int argc, const char_t** argv)
 
 void args_print_usage(args_option_t* options, int help_alignment)
 {
-  char_t buffer[128];
+  wchar_t buffer[128];
 
   for (; options->type != ARGS_OPT_END; options++)
   {
-    int len = _stprintf(buffer, _T("  "));
+    int len = _stprintf(buffer, L"  ");
 
     if (options->short_name != '\0')
-      len += _stprintf(buffer + len, _T("-%c"), options->short_name);
+      len += _stprintf(buffer + len, L"-%c", options->short_name);
     else
-      len += _stprintf(buffer + len, _T("     "));
+      len += _stprintf(buffer + len, L"     ");
 
     if (options->short_name != '\0' && options->long_name != NULL)
-      len += _stprintf(buffer + len, _T( ",  "));
+      len += _stprintf(buffer + len, L",  ");
 
     if (options->long_name != NULL)
-      len += _stprintf(buffer + len, _T("--%s"), options->long_name);
+      len += _stprintf(buffer + len, L"--%s", options->long_name);
 
     if (options->type == ARGS_OPT_STRING || options->type == ARGS_OPT_LONG ||
         options->type == ARGS_OPT_LONG_LONG)
     {
       len += _stprintf(
           buffer + len,
-          _T("%s%s"),
-          (options->long_name != NULL) ? _T("=") : _T(" "),
+          L"%s%s",
+          (options->long_name != NULL) ? L"=" : L" ",
           options->type_help);
     }
 
-    _tprintf(_T("%-*s%s\n"), help_alignment, buffer, options->help);
+    _tprintf(L"%-*s%s\n", help_alignment, buffer, options->help);
   }
 }
 
@@ -308,13 +302,10 @@ void args_free(args_option_t* options)
   }
 }
 
-void args_file_parse(char* path, char** arg, int len)
+void args_file_parse(wchar_t* path, wchar_t** arg, int len)
 {
-  wchar_t path_w[MAX_LENGTH_PATH];
-  mbstowcs(path_w, path, MAX_LENGTH_PATH);
-
   YR_FILE_DESCRIPTOR fd = CreateFile(
-      path_w,
+      path,
       GENERIC_READ,
       FILE_SHARE_READ | FILE_SHARE_WRITE,
       NULL,
@@ -340,14 +331,24 @@ void args_file_parse(char* path, char** arg, int len)
     return ARGS_ERROR_UNEXPECTED_ARG;
   }
 
-  char* line = NULL;
+  wchar_t* buf_w = yr_calloc(nread + 1, sizeof(wchar_t));
+  if (!buf)
+  {
+    CloseHandle(fd);
+    return ARGS_ERROR_UNEXPECTED_ARG;
+  }
+  mbstowcs(buf_w, buf, nread);
+  buf_w[nread] = L'\0';
+  yr_free(buf);
+
+  wchar_t* line = NULL;
   int i = 0;
 
-  line = strtok(buf, "\r\n");
+  line = _wcstok(buf_w, L"\r\n");
   while (i < len && line != NULL)
   {
     arg[i++] = line;
-    line = strtok(NULL, "\r\n");
+    line = _wcstok(NULL, L"\r\n");
   }
 
   CloseHandle(fd);
