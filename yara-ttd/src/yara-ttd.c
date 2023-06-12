@@ -169,236 +169,232 @@ static long long scan_mode = 0;
 args_option_t options[] = {
     OPT_STRING(
         0,
-        _T("atom-quality-table"),
+        L"atom-quality-table",
         &atom_quality_table,
-        _T("path to a file with the atom quality table"),
-        _T("FILE")),
+        L"path to a file with the atom quality table",
+        L"FILE"),
 
     OPT_BOOLEAN(
         'C',
-        _T("compiled-rules"),
+        L"compiled-rules",
         &rules_are_compiled,
-        _T("load compiled rules")),
+        L"load compiled rules"),
 
     OPT_BOOLEAN(
         'c',
-        _T("count"),
+        L"count",
         &print_count_only,
-        _T("print only number of matches")),
+        L"print only number of matches"),
 
     OPT_STRING_MULTI(
         'd',
-        _T("define"),
+        L"define",
         &ext_vars,
         MAX_ARGS_EXT_VAR,
-        _T("define external variable"),
-        _T("VAR=VALUE")),
+        L"define external variable",
+        L"VAR=VALUE"),
 
-    OPT_BOOLEAN(
-        0,
-        _T("fail-on-warnings"),
-        &fail_on_warnings,
-        _T("fail on warnings")),
+    OPT_BOOLEAN(0, L"fail-on-warnings", &fail_on_warnings, L"fail on warnings"),
 
-    OPT_BOOLEAN(0, _T("fast-scan"), &fast_scan, _T("fast matching mode")),
+    OPT_BOOLEAN(0, L"fast-scan", &fast_scan, L"fast matching mode"),
 
-    OPT_BOOLEAN('h', _T("help"), &show_help, _T("show this help and exit")),
+    OPT_BOOLEAN('h', L"help", &show_help, L"show this help and exit"),
 
     OPT_STRING_MULTI(
         'i',
-        _T("identifier"),
+        L"identifier",
         &identifiers,
         MAX_ARGS_IDENTIFIER,
-        _T("print only rules named IDENTIFIER"),
-        _T("IDENTIFIER")),
+        L"print only rules named IDENTIFIER",
+        L"IDENTIFIER"),
 
     OPT_LONG(
         0,
-        _T("max-process-memory-chunk"),
+        L"max-process-memory-chunk",
         &max_process_memory_chunk,
-        _T("set maximum chunk size while reading process memory")
-        _T(" (default=1073741824)"),
-        _T("NUMBER")),
+        L"set maximum chunk size while reading process memory"
+        L" (default=1073741824)",
+        L"NUMBER"),
 
     OPT_LONG(
         'l',
-        _T("max-rules"),
+        L"max-rules",
         &limit,
-        _T("abort scanning after matching a NUMBER of rules"),
-        _T("NUMBER")),
+        L"abort scanning after matching a NUMBER of rules",
+        L"NUMBER"),
 
     OPT_LONG(
         0,
-        _T("max-strings-per-rule"),
+        L"max-strings-per-rule",
         &max_strings_per_rule,
-        _T("set maximum number of strings per rule (default=10000)"),
-        _T("NUMBER")),
+        L"set maximum number of strings per rule (default=10000)",
+        L"NUMBER"),
 
     OPT_STRING_MULTI(
         'x',
-        _T("module-data"),
+        L"module-data",
         &modules_data,
         MAX_ARGS_MODULE_DATA,
-        _T("pass FILE's content as extra data to MODULE"),
-        _T("MODULE=FILE")),
+        L"pass FILE's content as extra data to MODULE",
+        L"MODULE=FILE"),
 
     OPT_BOOLEAN(
         'n',
-        _T("negate"),
+        L"negate",
         &negate,
-        _T("print only not satisfied rules (negate)"),
+        L"print only not satisfied rules (negate)",
         NULL),
 
     OPT_BOOLEAN(
         'N',
-        _T("no-follow-symlinks"),
+        L"no-follow-symlinks",
         &follow_symlinks,
-        _T("do not follow symlinks when scanning")),
+        L"do not follow symlinks when scanning"),
 
     OPT_BOOLEAN(
         'w',
-        _T("no-warnings"),
+        L"no-warnings",
         &ignore_warnings,
-        _T("disable warnings")),
+        L"disable warnings"),
 
-    OPT_BOOLEAN(0, _T("print-meta"), &show_meta, _T("print metadata")),
+    OPT_BOOLEAN(0, L"print-meta", &show_meta, L"print metadata"),
 
     OPT_BOOLEAN(
         'D',
-        _T("print-module-data"),
+        L"print-module-data",
         &show_module_data,
-        _T("print module data")),
+        L"print module data"),
 
     OPT_BOOLEAN(
         0,
-        _T("module-names"),
+        L"module-names",
         &show_module_names,
-        _T("show module names")),
+        L"show module names"),
 
     OPT_BOOLEAN(
         'e',
-        _T("print-namespace"),
+        L"print-namespace",
         &show_namespace,
-        _T("print rules' namespace")),
+        L"print rules' namespace"),
 
     OPT_BOOLEAN(
         'S',
-        _T("print-stats"),
+        L"print-stats",
         &show_stats,
-        _T("print rules' statistics")),
+        L"print rules' statistics"),
 
     OPT_BOOLEAN(
         's',
-        _T("print-strings"),
+        L"print-strings",
         &show_strings,
-        _T("print matching strings")),
+        L"print matching strings"),
 
     OPT_BOOLEAN(
         'L',
-        _T("print-string-length"),
+        L"print-string-length",
         &show_string_length,
-        _T("print length of matched strings")),
+        L"print length of matched strings"),
 
     OPT_BOOLEAN(
         'X',
-        _T("print-xor-key"),
+        L"print-xor-key",
         &show_xor_key,
-        _T("print xor key and plaintext of matched strings")),
+        L"print xor key and plaintext of matched strings"),
 
-    OPT_BOOLEAN('g', _T("print-tags"), &show_tags, _T("print tags")),
+    OPT_BOOLEAN('g', L"print-tags", &show_tags, L"print tags"),
 
     OPT_BOOLEAN(
         'r',
-        _T("recursive"),
+        L"recursive",
         &recursive_search,
-        _T("recursively search directories")),
+        L"recursively search directories"),
 
     OPT_BOOLEAN(
         0,
-        _T("scan-list"),
+        L"scan-list",
         &scan_list_search,
-        _T("scan files listed in FILE, one per line")),
+        L"scan files listed in FILE, one per line"),
 
     OPT_LONG_LONG(
         'z',
-        _T("skip-larger"),
+        L"skip-larger",
         &skip_larger,
-        _T("skip files larger than the given size when scanning a directory"),
-        _T("NUMBER")),
+        L"skip files larger than the given size when scanning a directory",
+        L"NUMBER"),
 
     OPT_LONG(
         'k',
-        _T("stack-size"),
+        L"stack-size",
         &stack_size,
-        _T("set maximum stack size (default=16384)"),
-        _T("SLOTS")),
+        L"set maximum stack size (default=16384)",
+        L"SLOTS"),
 
     OPT_STRING_MULTI(
         0,
-        _T("tag"),
+        L"tag",
         &tags,
         MAX_ARGS_TAG,
-        _T("print only rules tagged as TAG"),
-        _T("TAG")),
+        L"print only rules tagged as TAG",
+        L"TAG"),
 
     OPT_LONG(
         'p',
-        _T("threads"),
+        L"threads",
         &threads,
-        _T("use the specified NUMBER of threads to scan a directory"),
-        _T("NUMBER")),
+        L"use the specified NUMBER of threads to scan a directory",
+        L"NUMBER"),
 
     OPT_LONG(
         'a',
-        _T("timeout"),
+        L"timeout",
         &timeout,
-        _T("abort scanning after the given number of SECONDS"),
-        _T("SECONDS")),
+        L"abort scanning after the given number of SECONDS",
+        L"SECONDS"),
 
     OPT_BOOLEAN(
         'v',
-        _T("version"),
+        L"version",
         &show_version,
-        _T("show version information")),
+        L"show version information"),
 
     OPT_LONG(
         'm',
-        _T("memory-scan-mode"),
+        L"memory-scan-mode",
         &scan_mode,
-        _T("scan mode for memory to use"),
-        _T("NUMBER")),
+        L"scan mode for memory to use",
+        L"NUMBER"),
 
     OPT_STRING_MULTI(
         'f',
-        _T("scan-function"),
+        L"scan-function",
         &scan_functions,
         MAX_ARGS_SCAN_FUNCTION,
-        _T("function calls where you want to scan the trace"),
-        _T("FUNCTION")),
+        L"function calls where you want to scan the trace",
+        L"FUNCTION"),
 
     OPT_STRING_MULTI(
         't',
-        _T("scan-cursor"),
+        L"scan-cursor",
         &scan_cursors,
         MAX_ARGS_SCAN_CURSOR,
-        _T("cursor where you want to scan the trace"),
-        _T("CURSOR")),
+        L"cursor where you want to scan the trace",
+        L"CURSOR"),
 
     OPT_STRING(
         'F',
-        _T("scan-function-file"),
+        L"scan-function-file",
         &scan_functions_file,
-        _T("file with function calls where you want to scan the trace"),
-        _T("FUNCTION_FILE")),
+        L"file with function calls where you want to scan the trace",
+        L"FUNCTION_FILE"),
 
     OPT_STRING(
         'T',
-        _T("scan-cursor-file"),
+        L"scan-cursor-file",
         &scan_cursors_file,
-        _T("file with cursor where you want to scan the trace"),
-        _T("CURSOR_FILE")),
+        L"file with cursor where you want to scan the trace",
+        L"CURSOR_FILE"),
 
-    OPT_STRING(0, _T("cache"), &cache_file, _T("cache file"), _T("CACHE_FILE")),
+    OPT_STRING(0, L"cache", &cache_file, L"cache file", L"CACHE_FILE"),
 
     OPT_END(),
 };
@@ -513,7 +509,7 @@ static int scan_dir(const wchar_t *dir, SCAN_OPTIONS *scan_opts)
   int result = ERROR_SUCCESS;
   wchar_t path[MAX_PATH];
 
-  _sntprintf(path, MAX_PATH, _T("%s\\*"), dir);
+  _sntprintf(path, MAX_PATH, L"%s\\*", dir);
 
   WIN32_FIND_DATA FindFileData;
   HANDLE hFind = FindFirstFile(path, &FindFileData);
@@ -522,7 +518,7 @@ static int scan_dir(const wchar_t *dir, SCAN_OPTIONS *scan_opts)
   {
     do
     {
-      _sntprintf(path, MAX_PATH, _T("%s\\%s"), dir, FindFileData.cFileName);
+      _sntprintf(path, MAX_PATH, L"%s\\%s", dir, FindFileData.cFileName);
 
       if (!(FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
       {
@@ -548,8 +544,8 @@ static int scan_dir(const wchar_t *dir, SCAN_OPTIONS *scan_opts)
       }
       else if (
           scan_opts->recursive_search &&
-          _tcscmp(FindFileData.cFileName, _T(".")) != 0 &&
-          _tcscmp(FindFileData.cFileName, _T("..")) != 0)
+          wcscmp(FindFileData.cFileName, L".") != 0 &&
+          wcscmp(FindFileData.cFileName, L"..") != 0)
       {
         result = scan_dir(path, scan_opts);
       }
@@ -652,7 +648,7 @@ static int populate_scan_list(const wchar_t *filename, SCAN_OPTIONS *scan_opts)
 
   if (hFile == INVALID_HANDLE_VALUE)
   {
-    _ftprintf(stderr, _T("error: could not open file \"%s\".\n"), filename);
+    fwprintf(stderr, L"error: could not open file \"%s\".\n", filename);
     return ERROR_COULD_NOT_OPEN_FILE;
   }
 
@@ -660,9 +656,9 @@ static int populate_scan_list(const wchar_t *filename, SCAN_OPTIONS *scan_opts)
 
   if (fileSize == INVALID_FILE_SIZE)
   {
-    _ftprintf(
+    fwprintf(
         stderr,
-        _T("error: could not determine size of file \"%s\".\n"),
+        L"error: could not determine size of file \"%s\".\n",
         filename);
     CloseHandle(hFile);
     return ERROR_COULD_NOT_READ_FILE;
@@ -674,9 +670,9 @@ static int populate_scan_list(const wchar_t *filename, SCAN_OPTIONS *scan_opts)
 
   if (buf == NULL)
   {
-    _ftprintf(
+    fwprintf(
         stderr,
-        _T("error: could not allocate memory for file \"%s\".\n"),
+        L"error: could not allocate memory for file \"%s\".\n",
         filename);
     CloseHandle(hFile);
     return ERROR_INSUFFICIENT_MEMORY;
@@ -688,7 +684,7 @@ static int populate_scan_list(const wchar_t *filename, SCAN_OPTIONS *scan_opts)
   {
     if (!ReadFile(hFile, buf + total, fileSize - total, &nread, NULL))
     {
-      _ftprintf(stderr, _T("error: could not read file \"%s\".\n"), filename);
+      fwprintf(stderr, L"error: could not read file \"%s\".\n", filename);
       CloseHandle(hFile);
       return ERROR_COULD_NOT_READ_FILE;
     }
@@ -713,7 +709,7 @@ static int populate_scan_list(const wchar_t *filename, SCAN_OPTIONS *scan_opts)
     else
       result = file_queue_put(path, scan_opts->deadline);
 
-    path = _tcstok_s(NULL, _T("\n"), &context);
+    path = wcstok_s(NULL, L"\n", &context);
   }
 
   CloseHandle(hFile);
@@ -870,9 +866,9 @@ static void print_string(const uint8_t *data, int length, uint8_t xor_key)
   {
     uint8_t c = data[i] ^ xor_key;
     if (c >= 32 && c <= 126)
-      _tprintf(_T("%c"), c);
+      wprintf(L"%c", c);
     else
-      _tprintf(_T("\\x%02X"), c);
+      wprintf(L"\\x%02X", c);
   }
 }
 
@@ -895,13 +891,13 @@ static void print_escaped(const uint8_t *data, size_t length)
 
     default:
       if (data[i] >= 127)
-        _tprintf(_T("\\%03o"), data[i]);
+        wprintf(L"\\%03o", data[i]);
       else if (data[i] >= 32)
         _tprintf(_T("%" PF_C), data[i]);
       else if (cescapes[data[i]] != 0)
         _tprintf(_T("\\%" PF_C), cescapes[data[i]]);
       else
-        _tprintf(_T("\\%03o"), data[i]);
+        wprintf(L"\\%03o", data[i]);
     }
   }
 }
@@ -909,10 +905,10 @@ static void print_escaped(const uint8_t *data, size_t length)
 static void print_hex_string(const uint8_t *data, int length)
 {
   for (int i = 0; i < min(64, length); i++)
-    _tprintf(_T("%s%02X"), (i == 0 ? _T("") : _T(" ")), data[i]);
+    wprintf(L"%s%02X", (i == 0 ? L"" : L" "), data[i]);
 
   if (length > 64)
-    _tprintf(_T(" ..."));
+    wprintf(L" ...");
 }
 
 static void print_error(int error)
@@ -1039,32 +1035,32 @@ static void print_rules_stats(YR_RULES *rules)
     return;
   }
 
-  _tprintf(
-      _T("size of AC transition table        : %d\n"), stats.ac_tables_size);
+  wprintf(
+      L"size of AC transition table        : %d\n", stats.ac_tables_size);
 
-  _tprintf(
-      _T("average length of AC matches lists : %f\n"),
+  wprintf(
+      L"average length of AC matches lists : %f\n",
       stats.ac_average_match_list_length);
 
-  _tprintf(_T("number of rules                    : %d\n"), stats.num_rules);
+  wprintf(L"number of rules                    : %d\n", stats.num_rules);
 
-  _tprintf(_T("number of strings                  : %d\n"), stats.num_strings);
+  wprintf(L"number of strings                  : %d\n", stats.num_strings);
 
-  _tprintf(_T("number of AC matches               : %d\n"), stats.ac_matches);
+  wprintf(L"number of AC matches               : %d\n", stats.ac_matches);
 
-  _tprintf(
-      _T("number of AC matches in root node  : %d\n"),
+  wprintf(
+      L"number of AC matches in root node  : %d\n",
       stats.ac_root_match_list_length);
 
-  _tprintf(_T("number of AC matches in top %d longest lists\n"), t);
+  wprintf(L"number of AC matches in top %d longest lists\n", t);
 
   for (int i = 0; i < t; i++)
-    _tprintf(_T(" %3d: %d\n"), i + 1, stats.top_ac_match_list_lengths[i]);
+    wprintf(L" %3d: %d\n", i + 1, stats.top_ac_match_list_lengths[i]);
 
-  _tprintf(_T("match list length percentiles\n"));
+  wprintf(L"match list length percentiles\n");
 
   for (int i = 100; i >= 0; i--)
-    _tprintf(_T(" %3d: %d\n"), i, stats.ac_match_list_length_pctls[i]);
+    wprintf(L" %3d: %d\n", i, stats.ac_match_list_length_pctls[i]);
 }
 
 static int handle_message(
@@ -1123,7 +1119,7 @@ static int handle_message(
 
     Position *position = ((YR_TTD_ITERATOR_CTX *) context->iterator->context)
                              ->scan_cursor->position;
-    _tprintf(_T("%llx:%llx @ "), position->major, position->minor);
+    wprintf(L"%llx:%llx @ ", position->major, position->minor);
 
     if (show_namespace)
       _tprintf(_T("%" PF_S ":"), rule->ns->name);
@@ -1132,18 +1128,18 @@ static int handle_message(
 
     if (show_tags)
     {
-      _tprintf(_T("["));
+      wprintf(L"[");
 
       yr_rule_tags_foreach(rule, tag)
       {
         // print a comma except for the first tag
         if (tag != rule->tags)
-          _tprintf(_T(","));
+          wprintf(L",");
 
         _tprintf(_T("%" PF_S), tag);
       }
 
-      _tprintf(_T("] "));
+      wprintf(L"] ");
     }
 
     // Show meta-data.
@@ -1152,12 +1148,12 @@ static int handle_message(
     {
       YR_META *meta;
 
-      _tprintf(_T("["));
+      wprintf(L"[");
 
       yr_rule_metas_foreach(rule, meta)
       {
         if (meta != rule->metas)
-          _tprintf(_T(","));
+          wprintf(L",");
 
         if (meta->type == META_TYPE_INTEGER)
         {
@@ -1174,14 +1170,14 @@ static int handle_message(
         {
           _tprintf(_T("%" PF_S "=\""), meta->identifier);
           print_escaped((uint8_t *) (meta->string), strlen(meta->string));
-          _tprintf(_T("\""));
+          wprintf(L"\"");
         }
       }
 
-      _tprintf(_T("] "));
+      wprintf(L"] ");
     }
 
-    _tprintf(_T("%s\n"), ((CALLBACK_ARGS *) data)->file_path);
+    wprintf(L"%s\n", ((CALLBACK_ARGS *) data)->file_path);
 
     // Show matched strings.
 
@@ -1195,7 +1191,7 @@ static int handle_message(
 
         yr_string_matches_foreach(context, string, match)
         {
-          _tprintf(_T("%llx:%llx @ "), position->major, position->minor);
+          wprintf(L"%llx:%llx @ ", position->major, position->minor);
 
           if (show_string_length)
             _tprintf(
@@ -1211,14 +1207,14 @@ static int handle_message(
 
           if (show_xor_key)
           {
-            _tprintf(_T(":xor(0x%02x,"), match->xor_key);
+            wprintf(L":xor(0x%02x,", match->xor_key);
             print_string(match->data, match->data_length, match->xor_key);
-            _tprintf(_T(")"));
+            wprintf(L")");
           }
 
           if (show_strings)
           {
-            _tprintf(_T(": "));
+            wprintf(L": ");
 
             if (STRING_IS_HEX(string))
               print_hex_string(match->data, match->data_length);
@@ -1226,7 +1222,7 @@ static int handle_message(
               print_string(match->data, match->data_length, 0);
           }
 
-          _tprintf(_T("\n"));
+          wprintf(L"\n");
         }
       }
     }
@@ -1338,7 +1334,7 @@ static int callback(
     return CALLBACK_CONTINUE;
 
   case CALLBACK_MSG_CONSOLE_LOG:
-    _tprintf(_T("%" PF_S "\n"), (char *) message_data);
+    _tprintf(_T("%" PF_S "\n"), (wchar_t *) message_data);
     return CALLBACK_CONTINUE;
   }
 
@@ -1373,14 +1369,14 @@ static void *scanning_thread(void *param)
       if (print_count_only)
       {
         cli_mutex_lock(&output_mutex);
-        _tprintf(_T("%s: %d\n"), file_path, args->callback_args.current_count);
+        wprintf(L"%s: %d\n", file_path, args->callback_args.current_count);
         cli_mutex_unlock(&output_mutex);
       }
 
       if (result != ERROR_SUCCESS)
       {
         cli_mutex_lock(&output_mutex);
-        _ftprintf(stderr, _T("error scanning %s: "), file_path);
+        fwprintf(stderr, L"error scanning %s: ", file_path);
         print_scanner_error(args->scanner, result);
         cli_mutex_unlock(&output_mutex);
       }
@@ -1581,7 +1577,7 @@ int wmain(int argc, const wchar_t **argv)
     // file names. Instead use open _tfopen for openning the file and
     // yr_rules_load_stream for loading the rules from it.
 
-    FILE *fh = _tfopen(argv[0], _T("rb"));
+    FILE *fh = _wfopen(argv[0], L"rb");
 
     if (fh != NULL)
     {
@@ -1742,7 +1738,7 @@ int wmain(int argc, const wchar_t **argv)
 
     if (result != ERROR_SUCCESS)
     {
-      _ftprintf(stderr, _T("error: %d\n"), result);
+      fwprintf(stderr, L"error: %d\n", result);
       exit_with_code(EXIT_FAILURE);
     }
 
@@ -1754,13 +1750,13 @@ int wmain(int argc, const wchar_t **argv)
     result = scan_ttd(scanner, argv[argc - 1]);
     if (result != ERROR_SUCCESS)
     {
-      _ftprintf(stderr, _T("error scanning %s: "), argv[argc - 1]);
+      fwprintf(stderr, L"error scanning %s: ", argv[argc - 1]);
       print_scanner_error(scanner, result);
       exit_with_code(EXIT_FAILURE);
     }
 
     if (print_count_only)
-      _tprintf(_T("%d\n"), user_data.current_count);
+      wprintf(L"%d\n", user_data.current_count);
 
 #ifdef YR_PROFILING_ENABLED
     yr_scanner_print_profiling_info(scanner);
