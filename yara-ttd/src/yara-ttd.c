@@ -27,27 +27,12 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#if !defined(_WIN32) && !defined(__CYGWIN__)
-
-// for getline(3)
-#define _POSIX_C_SOURCE 200809L
-
-#include <dirent.h>
-#include <fcntl.h>
-#include <inttypes.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-#else
-
 #include <fcntl.h>
 #include <io.h>
 #include <windows.h>
 
 #define PRIx64 "I64x"
 #define PRId64 "I64d"
-
-#endif
 
 #include <ctype.h>
 #include <libyarattd_common.h>
