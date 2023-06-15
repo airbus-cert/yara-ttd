@@ -316,7 +316,7 @@ void args_file_parse(wchar_t* path, wchar_t** arg, int len)
     return ARGS_ERROR_UNEXPECTED_ARG;
 
   int nread;
-  size_t size = GetFileSize(fd, NULL);
+  DWORD size = GetFileSize(fd, NULL);
   char* buf = yr_calloc(size, sizeof(char));
   if (!buf)
   {

@@ -86,10 +86,10 @@ int init_scan_functions(YR_TTD_SCHEDULER* scheduler, wchar_t** scan_functions)
 // Default scan mode
 int init_scan_default(YR_TTD_SCHEDULER* scheduler)
 {
-  unsigned int exception_count =
-      scheduler->engine->IReplayEngine->GetExceptionEventCount(
-          scheduler->engine);
-  TTD_Replay_ExceptionEvent* exceptions =
+  Position pos;
+  size_t exception_count = scheduler->engine->IReplayEngine
+                               ->GetExceptionEventCount(scheduler->engine);
+  const TTD_Replay_ExceptionEvent* exceptions =
       scheduler->engine->IReplayEngine->GetExceptionEventList(
           scheduler->engine);
 
@@ -106,20 +106,26 @@ int init_scan_default(YR_TTD_SCHEDULER* scheduler)
         length + 1,
         L"Exception raised with code 0x%x",
         exceptions[i].info->ExceptionCode);
-    scheduler_add_cursor(scheduler, &exceptions[i].pos, source);
+
+    pos.major = exceptions[i].pos.major;
+    pos.minor = exceptions[i].pos.minor;
+    scheduler_add_cursor(scheduler, &pos, source);
   }
 
-  unsigned int thread_created_count =
+  size_t thread_created_count =
       scheduler->engine->IReplayEngine->GetThreadCreatedEventCount(
           scheduler->engine);
-  TTD_Replay_ThreadCreatedEvent* threads_created =
+  const TTD_Replay_ThreadCreatedEvent* threads_created =
       scheduler->engine->IReplayEngine->GetThreadCreatedEventList(
           scheduler->engine);
 
   for (unsigned int i = 0; i < thread_created_count; i++)
   {
-    scheduler->cursor->ICursor->SetPosition(
-        scheduler->cursor, &threads_created[i].pos);
+    Position pos = {
+        threads_created[i].pos.major,
+        threads_created[i].pos.minor,
+    };
+    scheduler->cursor->ICursor->SetPosition(scheduler->cursor, &pos);
     Position* current = scheduler->cursor->ICursor->GetPosition(
         scheduler->cursor, 0);
 
@@ -132,20 +138,21 @@ int init_scan_default(YR_TTD_SCHEDULER* scheduler)
         L"Thread 0x%x activated",
         threads_created[i].info->threadid);
 
-    scheduler_add_cursor(scheduler, &threads_created[i].pos, source);
+    pos.major = exceptions[i].pos.major;
+    pos.minor = exceptions[i].pos.minor;
+    scheduler_add_cursor(scheduler, &pos, source);
   }
 
-  unsigned int module_count =
-      scheduler->engine->IReplayEngine->GetModuleLoadedEventCount(
-          scheduler->engine);
-  TTD_Replay_ModuleLoadedEvent* modules =
+  size_t module_count = scheduler->engine->IReplayEngine
+                            ->GetModuleLoadedEventCount(scheduler->engine);
+  const TTD_Replay_ModuleLoadedEvent* modules =
       scheduler->engine->IReplayEngine->GetModuleLoadedEventList(
           scheduler->engine);
 
   Position* first = scheduler->engine->IReplayEngine->GetFirstPosition(
       scheduler->engine);
 
-  for (int i = 0; i < module_count; i++)
+  for (unsigned int i = 0; i < module_count; i++)
   {
     // If the module was loaded before the first cursor, skip it
     if (modules[i].pos.major <= first->major)
@@ -155,7 +162,9 @@ int init_scan_default(YR_TTD_SCHEDULER* scheduler)
     wchar_t* source = (wchar_t*) yr_calloc(length + 1, sizeof(wchar_t));
     swprintf(source, length + 1, L"Module %s loaded", modules[i].info->path);
 
-    scheduler_add_cursor(scheduler, &modules[i].pos, source);
+    pos.major = exceptions[i].pos.major;
+    pos.minor = exceptions[i].pos.minor;
+    scheduler_add_cursor(scheduler, &pos, source);
   }
 
   return ERROR_SUCCESS;

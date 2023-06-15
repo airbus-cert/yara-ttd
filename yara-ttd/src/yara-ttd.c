@@ -1237,12 +1237,20 @@ int wmain(int argc, const wchar_t **argv)
   yr_set_configuration_uint64(
       YR_CONFIG_MAX_PROCESS_MEMORY_CHUNK, max_process_memory_chunk);
 
-  if (scan_functions_file)
-    args_file_parse(
-        scan_functions_file, &scan_functions, MAX_ARGS_SCAN_FUNCTION);
+  if (scan_functions_file && args_file_parse(
+                                 scan_functions_file,
+                                 (char **) &scan_functions,
+                                 MAX_ARGS_SCAN_FUNCTION))
+  {
+    exit_with_code(EXIT_FAILURE);
+  }
 
-  if (scan_cursors_file)
-    args_file_parse(scan_cursors_file, &scan_cursors, MAX_ARGS_SCAN_CURSOR);
+  if (scan_cursors_file &&
+      args_file_parse(
+          scan_cursors_file, (char **) &scan_cursors, MAX_ARGS_SCAN_CURSOR))
+  {
+    exit_with_code(EXIT_FAILURE);
+  }
 
   // Try to load the rules file as a binary file containing
   // compiled rules first

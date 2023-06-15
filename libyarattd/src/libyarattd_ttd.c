@@ -4,7 +4,7 @@
 #include "libyarattd_crypto.h"
 #include "libyarattd_ttd.h"
 
-int init_ttd_engine(TTD_Replay_ReplayEngine** engine, wchar_t* filename)
+int init_ttd_engine(TTD_Replay_ReplayEngine** engine, const wchar_t* filename)
 {
   HINSTANCE h_ttd_replay_library;
   PROC_Initiate InitiateReplayEngineHandshake;
