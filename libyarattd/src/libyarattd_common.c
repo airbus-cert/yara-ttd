@@ -45,7 +45,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <yara.h>
 
 #include "libyarattd_common.h"
-#include "libyarattd_unicode.h"
 
 #define exit_with_code(code) \
   {                          \
@@ -53,8 +52,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     goto _exit;              \
   }
 
-#if defined(_UNICODE)
-char* unicode_to_ansi(const char_t* str)
+char* unicode_to_ansi(const wchar_t* str)
 {
   if (str == NULL)
     return NULL;
@@ -69,33 +67,32 @@ char* unicode_to_ansi(const char_t* str)
 
   return str_utf8;
 }
-#endif
 
-bool compile_files(YR_COMPILER* compiler, int argc, const char_t** argv)
+bool compile_files(YR_COMPILER* compiler, int argc, const wchar_t** argv)
 {
   for (int i = 0; i < argc - 1; i++)
   {
     FILE* rule_file;
-    const char_t* ns;
-    const char_t* file_name;
-    char_t* colon = NULL;
+    const wchar_t* ns;
+    const wchar_t* file_name;
+    wchar_t* colon = NULL;
     int errors;
 
-    if (access(argv[i], 0) != 0)
+    if (_waccess_s(argv[i], 0) != 0)
     {
       // A file with the name specified by the command-line argument wasn't
       // found, it may be because the name is prefixed with a namespace, so
       // lets try to find the colon that separates the namespace from the
       /// actual file name.
-      colon = (char_t*) _tcschr(argv[i], ':');
+      colon = wcschr(argv[i], L':');
     }
 
     // The namespace delimiter must be a colon not followed by a backslash,
     // as :\ is the separator for a drive letter in Windows.
-    if (colon && *(colon + 1) != '\\')
+    if (colon && *(colon + 1) != L'\\')
     {
       file_name = colon + 1;
-      *colon = '\0';
+      *colon = L'\0';
       ns = argv[i];
     }
     else
@@ -104,18 +101,17 @@ bool compile_files(YR_COMPILER* compiler, int argc, const char_t** argv)
       ns = NULL;
     }
 
-    if (_tcscmp(file_name, _T("-")) == 0)
+    if (wcscmp(file_name, L"-") == 0)
       rule_file = stdin;
     else
-      rule_file = _tfopen(file_name, _T("r"));
+      rule_file = _wfopen(file_name, L"r");
 
     if (rule_file == NULL)
     {
-      _ftprintf(stderr, _T("error: could not open file: %s\n"), file_name);
+      fwprintf(stderr, L"error: could not open file: %s\n", file_name);
       return false;
     }
 
-#if defined(_UNICODE)
     char* file_name_mb = unicode_to_ansi(file_name);
     char* ns_mb = unicode_to_ansi(ns);
 
@@ -123,12 +119,7 @@ bool compile_files(YR_COMPILER* compiler, int argc, const char_t** argv)
 
     free(file_name_mb);
     free(ns_mb);
-#else
-    errors = yr_compiler_add_file(compiler, rule_file, ns, file_name);
-#endif
-
     fclose(rule_file);
-
     if (errors > 0)
       return false;
   }

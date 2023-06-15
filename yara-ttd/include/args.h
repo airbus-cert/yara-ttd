@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ARGPARSE_H
 
 #include <stdio.h>
-#include "libyarattd_unicode.h"
 
 #define MAX_LENGTH_PATH 256
 

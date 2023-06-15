@@ -26,7 +26,6 @@ set(libyarattd_INCLUDE
 	${libyarattd_STATIC_INCLUDE}/libyarattd_ttd.h
 	${libyarattd_STATIC_INCLUDE}/libyarattd_ttd_types.h
 	${libyarattd_STATIC_INCLUDE}/libyarattd_types.h
-	${libyarattd_STATIC_INCLUDE}/libyarattd_unicode.h
 	${libyarattd_STATIC_INCLUDE}/libyarattd_utils.h
 	${libyarattd_STATIC_INCLUDE}/libyarattd_vect.h
 	${libyarattd_STATIC_INCLUDE}/libyarattd_virtual_alloc.h

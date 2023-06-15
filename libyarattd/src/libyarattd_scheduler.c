@@ -186,7 +186,7 @@ int scheduler_init(
 
   if (check_run_file(path) != ERROR_SUCCESS)
   {
-    fwprintf(stderr, _T("error: could not open file \"%s\".\n"), path);
+    fwprintf(stderr, L"error: could not open file \"%s\".\n", path);
     return ERROR_COULD_NOT_OPEN_FILE;
   }
 

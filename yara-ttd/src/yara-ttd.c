@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <libyarattd_common.h>
 #include <libyarattd_scanner.h>
 #include <libyarattd_scheduler.h>
-#include <libyarattd_unicode.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -438,7 +437,7 @@ static int file_queue_put(const wchar_t *file_path, time_t deadline)
 
   cli_mutex_lock(&queue_mutex);
 
-  file_queue[queue_tail].path = _tcsdup(file_path);
+  file_queue[queue_tail].path = _wcsdup(file_path);
   queue_tail = (queue_tail + 1) % (MAX_QUEUED_FILES + 1);
 
   cli_mutex_unlock(&queue_mutex);
@@ -490,7 +489,7 @@ static int scan_dir(const wchar_t *dir, SCAN_OPTIONS *scan_opts)
   int result = ERROR_SUCCESS;
   wchar_t path[MAX_PATH];
 
-  _sntprintf(path, MAX_PATH, L"%s\\*", dir);
+  _snwprintf(path, MAX_PATH, L"%s\\*", dir);
 
   WIN32_FIND_DATA FindFileData;
   HANDLE hFind = FindFirstFile(path, &FindFileData);
@@ -499,7 +498,7 @@ static int scan_dir(const wchar_t *dir, SCAN_OPTIONS *scan_opts)
   {
     do
     {
-      _sntprintf(path, MAX_PATH, L"%s\\%s", dir, FindFileData.cFileName);
+      _snwprintf(path, MAX_PATH, L"%s\\%s", dir, FindFileData.cFileName);
 
       if (!(FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
       {
@@ -874,7 +873,7 @@ static void print_escaped(const uint8_t *data, size_t length)
       else if (data[i] >= 32)
         wprintf(L"%hc", data[i]);
       else if (cescapes[data[i]] != 0)
-        _tprintf(L"\\%hc", cescapes[data[i]]);
+        wprintf(L"\\%hc", cescapes[data[i]]);
       else
         wprintf(L"\\%03o", data[i]);
     }
@@ -1176,7 +1175,7 @@ static int handle_message(
                 match->data_length,
                 string->identifier);
           else
-            _tprintf(
+            wprintf(
                 L"0x%I64x:%hs",
                 match->base + match->offset,
                 string->identifier);
