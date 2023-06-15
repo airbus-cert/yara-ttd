@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ARGPARSE_H
 
 #include <stdio.h>
-#include "libyarattd_unicode.h"
 
 #define MAX_LENGTH_PATH 256
 
@@ -66,12 +65,12 @@ extern "C"
   typedef struct _args_option
   {
     args_option_type_t type;
-    const char_t short_name;
-    const char_t *long_name;
+    const wchar_t short_name;
+    const wchar_t *long_name;
     void *value;
     int max_count;
-    const char_t *help;
-    const char_t *type_help;
+    const wchar_t *help;
+    const wchar_t *type_help;
     int count;
   } args_option_t;
 
@@ -103,13 +102,13 @@ extern "C"
     ARGS_OPT_END, 0 \
   }
 
-  int args_parse(args_option_t *options, int argc, const char_t **argv);
+  int args_parse(args_option_t *options, int argc, const wchar_t **argv);
 
   void args_print_usage(args_option_t *options, int alignment);
 
   void args_free(args_option_t *options);
 
-  void args_file_parse(char *path, char **arg, int len);
+  void args_file_parse(wchar_t *path, wchar_t **arg, int len);
 
 #ifdef __cplusplus
 }

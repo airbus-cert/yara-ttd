@@ -27,31 +27,22 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #ifndef LIBYARATTD_COMMON_H
 #define LIBYARATTD_COMMON_H
 
 #include <yara.h>
 
-#include "libyarattd_unicode.h"
+char* unicode_to_ansi(const wchar_t* str);
 
-
-#ifdef _UNICODE
-char* unicode_to_ansi(const char_t* str);
-#endif
-
-bool compile_files(
-	YR_COMPILER* compiler,
-	int argc,
-	const char_t** argv);
+bool compile_files(YR_COMPILER* compiler, int argc, const wchar_t** argv);
 
 int define_external_variables(
-	char** ext_vars,
-	YR_RULES* rules,
-	YR_COMPILER* compiler);
+    char** ext_vars,
+    YR_RULES* rules,
+    YR_COMPILER* compiler);
 
-bool is_integer(const char *str);
+bool is_integer(const char* str);
 
-bool is_float(const char *str);
+bool is_float(const char* str);
 
 #endif
