@@ -110,7 +110,8 @@ YR_API YR_MEMORY_BLOCK* yr_ttd_get_next_memory_block(
 
     // Work on the next memory range in the map
     YR_TTD_MEMORY_RANGE* next =
-        (YR_TTD_MEMORY_RANGE*) (ctx->memory_map->elements[ctx->current_memory_range]);
+        (YR_TTD_MEMORY_RANGE*) (ctx->memory_map
+                                    ->elements[ctx->current_memory_range]);
     ctx->max_address = next->end;
     ctx->current_address = next->start;
     ctx->current_block.base = ctx->current_address;
@@ -152,7 +153,8 @@ YR_API YR_MEMORY_BLOCK* yr_ttd_get_first_memory_block(
 
   ctx->current_memory_range = 0;
   YR_TTD_MEMORY_RANGE* range =
-      (YR_TTD_MEMORY_RANGE*) (ctx->memory_map->elements[ctx->current_memory_range]);
+      (YR_TTD_MEMORY_RANGE*) (ctx->memory_map
+                                  ->elements[ctx->current_memory_range]);
   ctx->max_address = range->end;
   ctx->current_address = range->start;
   ctx->current_block.base = ctx->current_address;
