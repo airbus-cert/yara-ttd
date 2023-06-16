@@ -205,7 +205,7 @@ args_option_t options[] = {
         L"NUMBER"),
 
     OPT_LONG(
-        'l',
+        0,
         L"max-rules",
         &limit,
         L"abort scanning after matching a NUMBER of rules",
@@ -286,7 +286,7 @@ args_option_t options[] = {
         L"recursively search directories"),
 
     OPT_BOOLEAN(
-        0,
+        'l',
         L"scan-list",
         &scan_list_search,
         L"scan files listed in FILE, one per line"),
