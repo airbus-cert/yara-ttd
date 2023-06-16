@@ -538,7 +538,7 @@ static int scan_ttd(YR_SCANNER *scanner, const wchar_t *filename)
 static int get_filenames_from_scan_list(Vect *filenames, const wchar_t *path)
 {
   wchar_t *context = NULL;
-  DWORD nread;
+  DWORD nread = 0;
   int result = ERROR_SUCCESS;
 
   HANDLE hFile = CreateFile(
@@ -567,8 +567,7 @@ static int get_filenames_from_scan_list(Vect *filenames, const wchar_t *path)
   }
 
   // INVALID_FILE_SIZE is 0xFFFFFFFF, so (+1) will not overflow
-  wchar_t *buf = (wchar_t *) VirtualAlloc(
-      NULL, fileSize + 1, MEM_COMMIT, PAGE_READWRITE);
+  char *buf = (char *) yr_malloc(fileSize + 1);
 
   if (buf == NULL)
   {
@@ -591,9 +590,14 @@ static int get_filenames_from_scan_list(Vect *filenames, const wchar_t *path)
     total += nread;
   }
 
-  wchar_t *filename = wcstok_s(buf, L"\n", &context);
+  wchar_t *buf_w = yr_calloc(strlen(buf), sizeof(wchar_t));
+  mbstowcs(buf_w, buf, nread);
+  buf_w[nread] = L'\0';
+  yr_free(buf);
 
-  while (result == ERROR_SUCCESS && path != NULL)
+  wchar_t *filename = wcstok_s(buf_w, L"\n", &context);
+
+  while (result == ERROR_SUCCESS && filename != NULL)
   {
     // Remove trailing carriage return, if present.
     if (*filename != L'\0')
