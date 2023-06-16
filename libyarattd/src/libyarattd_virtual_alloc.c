@@ -191,21 +191,6 @@ int build_virtual_alloc_map_from_cache(
 
 int build_virtual_alloc_map(YR_TTD_SCHEDULER* scheduler)
 {
-  // Check that the idx file exists in the same path as the trace file
-  // This file is needed by TTDReplay.dll to use
-  // ICursor.GetCrossPlatformContext
-  if (check_idx_file(scheduler->path) != ERROR_SUCCESS)
-  {
-    fwprintf(
-        stderr,
-        L"Error: idx file not found\nTo use the Virtual Alloc mode, you need "
-        L"to have the idx file alongside the run file recored by TTD.\nIf "
-        L"you "
-        L"don't have this file, you can generate it automatically by "
-        L"openning the .run file with WinDbg.\n");
-    return ERROR_INTERNAL_FATAL_ERROR;
-  }
-
   // Save current cursor position
   Position* last = scheduler->engine->IReplayEngine->GetLastPosition(
       scheduler->engine);

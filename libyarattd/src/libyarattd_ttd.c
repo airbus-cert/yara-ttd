@@ -57,13 +57,18 @@ int init_ttd_engine(TTD_Replay_ReplayEngine** engine, wchar_t* filename)
   result = CreateReplayEngineWithHandshake(tmp, &instance, VERSION_GUID);
   *engine = (TTD_Replay_ReplayEngine*) instance;
 
-  if ((*engine)->IReplayEngine->Initialize((*engine), filename) == TRUE)
-  {
-    return ERROR_SUCCESS;
-  }
-  else
+  if ((*engine)->IReplayEngine->Initialize((*engine), filename) != TRUE)
   {
     fwprintf(stdout, L"Failed to initialize ReplayEngine\n");
+    return ERROR_INTERNAL_FATAL_ERROR;
+  }
+
+  // Generate if needed the idx file of the trace file. This file is needed by
+  // TTDReplay.dll to call some API endpoints like GetCrossPlatformContext
+  build_index_from_engine(*engine);
+  if (check_idx_file(filename) != ERROR_SUCCESS)
+  {
+    fwprintf(stderr, L"Failed to generate index file\n");
     return ERROR_INTERNAL_FATAL_ERROR;
   }
 }
@@ -98,4 +103,10 @@ char* base64_encode(
     encoded_data[*output_length - 1 - i] = '\x00';
 
   return encoded_data;
+}
+
+void dummy() {}
+void build_index_from_engine(TTD_Replay_ReplayEngine* engine)
+{
+  engine->IReplayEngine->BuildIndex(engine, &dummy, 0, 0);
 }
