@@ -22,7 +22,6 @@ YR_API YR_MEMORY_BLOCK* yr_ttd_get_next_memory_block(
 
 YR_API const uint8_t* yr_ttd_fetch_memory_block_data(YR_MEMORY_BLOCK* block);
 
-// TODO undefined function
 YR_API int yr_ttd_close_iterator(YR_MEMORY_BLOCK_ITERATOR* iterator);
 
 #endif

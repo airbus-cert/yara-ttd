@@ -21,7 +21,7 @@ YR_API int yr_scanner_scan_ttd(
     scanner->flags |= SCAN_FLAGS_PROCESS_MEMORY;
     result = yr_scanner_scan_mem_blocks(scanner, &iterator);
     scanner->flags = prev_flags;
-    // yr_ttd_close_iterator(&iterator);
+    yr_ttd_close_iterator(&iterator);
   }
   return result;
 }
@@ -110,7 +110,8 @@ YR_API YR_MEMORY_BLOCK* yr_ttd_get_next_memory_block(
 
     // Work on the next memory range in the map
     YR_TTD_MEMORY_RANGE* next =
-        (YR_TTD_MEMORY_RANGE*) (ctx->memory_map->elements[ctx->current_memory_range]);
+        (YR_TTD_MEMORY_RANGE*) (ctx->memory_map
+                                    ->elements[ctx->current_memory_range]);
     ctx->max_address = next->end;
     ctx->current_address = next->start;
     ctx->current_block.base = ctx->current_address;
@@ -152,7 +153,8 @@ YR_API YR_MEMORY_BLOCK* yr_ttd_get_first_memory_block(
 
   ctx->current_memory_range = 0;
   YR_TTD_MEMORY_RANGE* range =
-      (YR_TTD_MEMORY_RANGE*) (ctx->memory_map->elements[ctx->current_memory_range]);
+      (YR_TTD_MEMORY_RANGE*) (ctx->memory_map
+                                  ->elements[ctx->current_memory_range]);
   ctx->max_address = range->end;
   ctx->current_address = range->start;
   ctx->current_block.base = ctx->current_address;
@@ -160,4 +162,19 @@ YR_API YR_MEMORY_BLOCK* yr_ttd_get_first_memory_block(
   ctx->current_block.fetch_data = yr_ttd_fetch_memory_block_data;
 
   return &ctx->current_block;
+}
+
+int yr_ttd_close_iterator(YR_MEMORY_BLOCK_ITERATOR* iterator)
+{
+  YR_TTD_ITERATOR_CTX* ctx = (YR_TTD_ITERATOR_CTX*) iterator->context;
+  if (ctx->memory_buffer)
+    yr_free(ctx->memory_buffer);
+
+  if (ctx->buffer)
+    yr_free(ctx->buffer);
+
+  if (ctx->memory_map)
+    vect_delete(ctx->memory_map);
+
+  yr_free(ctx);
 }

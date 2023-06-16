@@ -38,23 +38,42 @@ int init_scan_functions(YR_TTD_SCHEDULER* scheduler, wchar_t** scan_functions)
 
   for (int i = 0; scan_functions[i]; i++)
   {
-    YR_TTD_FUNCTION* scan_function = (YR_TTD_FUNCTION*) yr_malloc(
-        sizeof(YR_TTD_FUNCTION));
+    YR_TTD_FUNCTION* scan_function = yr_malloc(sizeof(YR_TTD_FUNCTION));
     if (!scan_function)
       return ERROR_INTERNAL_FATAL_ERROR;
 
-    wchar_t* buffer = NULL;
-    scan_function->module = wcstok(scan_functions[i], L"!", &buffer);
-    scan_function->name = buffer;
+    wchar_t full_name[MAX_LENGTH_FUNCTION_NAME];
+    wcscpy(full_name, scan_functions[i]);
+
+    wchar_t* name = NULL;
+    wchar_t* module = wcstok(full_name, L"!", &name);
+    if (!module || !name)
+    {
+      fwprintf(
+          stderr,
+          L"[ERROR] Cannot parse function %s\nMake sure to use the format "
+          L"module_name!function_name\n",
+          scan_functions[i]);
+      return ERROR_INTERNAL_FATAL_ERROR;
+    }
+
+    scan_function->module = yr_malloc(wcslen(module) * sizeof(wchar_t));
+    scan_function->name = yr_malloc(wcslen(name) * sizeof(wchar_t));
+    if (!scan_function->module || !scan_function->name)
+      return ERROR_INTERNAL_FATAL_ERROR;
+
+    wcscpy(scan_function->module, module);
+    wcscpy(scan_function->name, name);
 
     TRY(resolve_function_address(scheduler, scan_function));
     if (!scan_function->address)
     {
       fwprintf(
           stdout,
-          L"[WARNING] Unable to find %s!%s\n",
+          L"[WARNING] Unable to find %s!%s in %s\n",
           scan_function->module,
-          scan_function->name);
+          scan_function->name,
+          scheduler->path);
       continue;
     }
 

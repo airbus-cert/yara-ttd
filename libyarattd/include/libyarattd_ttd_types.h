@@ -253,10 +253,7 @@ typedef struct TTD_Replay_IReplayEngine_vftable
   //___EReplayEngine_Replay_TTD__UEAAPEAXI_Z)(TTD::Replay::ReplayEngine*
   //__hidden this, unsigned int);
   void* unk50;
-  //	void(__fastcall*
-  //_Destroy_ReplayEngine_Replay_TTD__UEAAXXZ)(TTD::Replay::ReplayEngine*
-  //__hidden this);
-  void* unk51;
+  void(__fastcall* Destroy_Replay_Engine)(TTD_Replay_ReplayEngine* self);
   bool(__fastcall* Initialize)(
       TTD_Replay_ReplayEngine* self,
       const wchar_t* trace_filename);
