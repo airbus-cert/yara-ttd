@@ -97,6 +97,9 @@ typedef struct TTD_Replay_ExceptionEvent
   TTD_Replay_Exception* info;
 } TTD_Replay_ExceptionEvent;
 
+typedef enum TTD_Replay_IndexStatus TTD_Replay_IndexStatus;
+typedef enum TTD_Replay_IndexBuildFlags TTD_Replay_IndexBuildFlags;
+
 typedef struct TTD_Replay_IReplayEngine_vftable
 {
   // const void* (__fastcall*
@@ -227,11 +230,12 @@ typedef struct TTD_Replay_IReplayEngine_vftable
   struct TTD_Replay_ICursor*(__fastcall* NewCursor)(
       TTD_Replay_ReplayEngine* self,
       const unsigned char* guid);
-  //	enum TTD::Replay::IndexStatus(__stdcall __high*
-  //_BuildIndex_ReplayEngine_Replay_TTD__UEAA_AW4IndexStatus_23_P6AXPEBXPEBUIndexBuildProgressType_23__Z0W4IndexBuildFlags_23__Z)(void(__stdcall
-  //__high*)(const void*, const struct TTD::Replay::IndexBuildProgressType*),
-  // const void*, enum TTD::Replay::IndexBuildFlags);
-  void* unk44;
+  TTD_Replay_IndexStatus(__stdcall* BuildIndex)(
+      TTD_Replay_ReplayEngine* self,
+      void* callback,                  // set this to an empty function
+      const void* unk1,                // set this to nullptr
+      TTD_Replay_IndexBuildFlags unk2  // set this to 0
+  );
   //	enum TTD::Replay::IndexStatus(__high*
   //_GetIndexStatus_ReplayEngine_Replay_TTD__UEBA_AW4IndexStatus_23_XZ)(void);
   void* unk45;
