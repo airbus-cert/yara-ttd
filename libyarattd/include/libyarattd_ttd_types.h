@@ -230,12 +230,8 @@ typedef struct TTD_Replay_IReplayEngine_vftable
   struct TTD_Replay_ICursor*(__fastcall* NewCursor)(
       TTD_Replay_ReplayEngine* self,
       const unsigned char* guid);
-  TTD_Replay_IndexStatus(__stdcall* BuildIndex)(
-      TTD_Replay_ReplayEngine* self,
-      void* callback,                  // set this to an empty function
-      const void* unk1,                // set this to nullptr
-      TTD_Replay_IndexBuildFlags unk2  // set this to 0
-  );
+  TTD_Replay_IndexStatus(
+      __stdcall* BuildIndex)(TTD_Replay_ReplayEngine* self, void* callback);
   //	enum TTD::Replay::IndexStatus(__high*
   //_GetIndexStatus_ReplayEngine_Replay_TTD__UEBA_AW4IndexStatus_23_XZ)(void);
   void* unk45;

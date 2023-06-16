@@ -105,8 +105,8 @@ char* base64_encode(
   return encoded_data;
 }
 
-void dummy() {}
+void dummy_callback() {}
 void build_index_from_engine(TTD_Replay_ReplayEngine* engine)
 {
-  engine->IReplayEngine->BuildIndex(engine, &dummy, 0, 0);
+  engine->IReplayEngine->BuildIndex(engine, &dummy_callback);
 }
