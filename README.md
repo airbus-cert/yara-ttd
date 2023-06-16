@@ -174,14 +174,14 @@ trace01.tmp
 > .\yara-ttd path\to\rule .\traces
 ```
 
-Alternatively, you can specify all the traces you want to scan in a file and use the flag `--scan-list`. It will scan the files listed, one per line:
+Alternatively, you can specify all the traces you want to scan in a file and use the flag `--scan-list` or `-l`. It will scan the files listed, one per line:
 
 ```bash
 > cat .\scan_me.txt
-traces\trace01.run
-traces\trace02.run
+.\traces\trace01.run
+.\traces\trace02.run
 
-> .\yara-ttd --scan-list path\to\rule .\scan_me.txt
+> .\yara-ttd -l path\to\rule .\scan_me.txt
 ```
 
 > When scanning multiple files, `yara-ttd` runs scans one after the other, and not simultaneously with threading like the original `yara` cli.
