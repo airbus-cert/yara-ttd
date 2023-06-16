@@ -1424,6 +1424,9 @@ int wmain(int argc, const wchar_t **argv)
 #ifdef YR_PROFILING_ENABLED
     yr_scanner_print_profiling_info(scanner);
 #endif
+
+    if (k + 1 < filenames->count)
+      wprintf(L"-----------------------------------------------\n\n");
   }
 
   result = EXIT_SUCCESS;
