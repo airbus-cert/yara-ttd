@@ -37,7 +37,7 @@ char* unicode_to_ansi(const wchar_t* str);
 bool compile_files(YR_COMPILER* compiler, int argc, const wchar_t** argv);
 
 int define_external_variables(
-    char** ext_vars,
+    wchar_t** ext_vars,
     YR_RULES* rules,
     YR_COMPILER* compiler);
 

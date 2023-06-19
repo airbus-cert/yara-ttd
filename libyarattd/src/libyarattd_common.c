@@ -128,7 +128,7 @@ bool compile_files(YR_COMPILER* compiler, int argc, const wchar_t** argv)
 }
 
 int define_external_variables(
-    char** ext_vars,
+    wchar_t** ext_vars,
     YR_RULES* rules,
     YR_COMPILER* compiler)
 {
@@ -136,7 +136,8 @@ int define_external_variables(
 
   for (int i = 0; ext_vars[i] != NULL; i++)
   {
-    char* equal_sign = strchr(ext_vars[i], '=');
+    char* ext_var = unicode_to_ansi(ext_vars[i]);
+    char* equal_sign = strchr(ext_var, '=');
 
     if (!equal_sign)
     {
@@ -151,7 +152,7 @@ int define_external_variables(
     *equal_sign = '\0';
 
     char* value = equal_sign + 1;
-    char* identifier = ext_vars[i];
+    char* identifier = ext_var;
 
     if (is_float(value))
     {

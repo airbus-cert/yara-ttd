@@ -108,7 +108,7 @@ extern "C"
 
   void args_free(args_option_t *options);
 
-  void args_file_parse(wchar_t *path, wchar_t **arg, int len);
+  int args_file_parse(wchar_t *path, wchar_t **arg, int len);
 
 #ifdef __cplusplus
 }
