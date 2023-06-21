@@ -27,14 +27,14 @@ if (WindbgPreview_INSTALL_PATH)
 	INSTALL_TTDREPLAY("${EXECUTABLE_OUTPUT_PATH}")
 endif (WindbgPreview_INSTALL_PATH)
 
-# The yara-ttd executable program
-add_subdirectory(yara-ttd)
-
 # Yara library
 add_subdirectory(yara)
 
 # The yarattd library
 add_subdirectory(libyarattd)
+
+# The yara-ttd executable program
+add_subdirectory(yara-ttd)
 
 # Tests
 if(BUILD_TESTS)

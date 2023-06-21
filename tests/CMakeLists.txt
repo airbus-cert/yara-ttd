@@ -8,6 +8,8 @@ add_executable(test_upx
 
 if(MSVC)
 	add_definitions(-DWIN32 -DUNICODE -D_UNICODE)
-	target_compile_options(yara-ttd PUBLIC "$<$<CONFIG:DEBUG>:/MTd>" "$<$<CONFIG:DEBUG>:/WX>")
-	target_compile_options(yara-ttd PUBLIC "$<$<CONFIG:RELEASE>:/MT>" "$<$<CONFIG:RELEASE>:/WX>")
+	target_compile_options(test_upx PUBLIC "$<$<CONFIG:DEBUG>:/MTd>" "$<$<CONFIG:DEBUG>:/WX>")
+	target_compile_options(test_upx PUBLIC "$<$<CONFIG:RELEASE>:/MT>" "$<$<CONFIG:RELEASE>:/WX>")
+	target_compile_options(test_shellcode PUBLIC "$<$<CONFIG:DEBUG>:/MTd>" "$<$<CONFIG:DEBUG>:/WX>")
+	target_compile_options(test_shellcode PUBLIC "$<$<CONFIG:RELEASE>:/MT>" "$<$<CONFIG:RELEASE>:/WX>")
 endif()

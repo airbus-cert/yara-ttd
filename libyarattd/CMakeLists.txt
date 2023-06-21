@@ -43,8 +43,8 @@ target_link_libraries(libyarattd PUBLIC libyara)
 
 if(MSVC)
 	add_definitions(-DWIN32 -DUNICODE -D_UNICODE)
-	target_compile_options(yara-ttd PUBLIC "$<$<CONFIG:DEBUG>:/MTd>" "$<$<CONFIG:DEBUG>:/WX>")
-	target_compile_options(yara-ttd PUBLIC "$<$<CONFIG:RELEASE>:/MT>" "$<$<CONFIG:RELEASE>:/WX>")
+	target_compile_options(libyarattd PUBLIC "$<$<CONFIG:DEBUG>:/MTd>" "$<$<CONFIG:DEBUG>:/WX>")
+	target_compile_options(libyarattd PUBLIC "$<$<CONFIG:RELEASE>:/MT>" "$<$<CONFIG:RELEASE>:/WX>")
 endif()
 
 install(TARGETS libyarattd EXPORT yarattd LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
