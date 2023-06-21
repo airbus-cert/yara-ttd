@@ -177,4 +177,5 @@ int yr_ttd_close_iterator(YR_MEMORY_BLOCK_ITERATOR* iterator)
     vect_delete(ctx->memory_map);
 
   yr_free(ctx);
+  return ERROR_SUCCESS;
 }

@@ -113,7 +113,7 @@ int check_idx_file(const wchar_t* filename)
 {
   // Assumes that the filename is the one of the trace file
   // TODO use magic bytes instead of extension
-  unsigned int len = wcslen(filename);
+  size_t len = wcslen(filename);
   if (len < 3)
     return ERROR_COULD_NOT_OPEN_FILE;
 

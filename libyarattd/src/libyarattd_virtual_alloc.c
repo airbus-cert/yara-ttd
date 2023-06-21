@@ -129,7 +129,7 @@ int build_virtual_alloc_map_from_cache(
     return ERROR_FILE_NOT_FOUND;
 
   int nread;
-  size_t size = GetFileSize(fd, NULL);
+  DWORD size = GetFileSize(fd, NULL);
   wchar_t* buf = yr_calloc(size, sizeof(wchar_t));
   if (!buf)
   {
@@ -169,14 +169,15 @@ int build_virtual_alloc_map_from_cache(
     Position* start = yr_malloc(sizeof(Position));
     YR_TTD_EVENT* event = yr_malloc(sizeof(YR_TTD_EVENT));
     YR_TTD_MEMORY_RANGE* range = yr_malloc(sizeof(YR_TTD_MEMORY_RANGE));
-    arg = wcstok(lines->elements[i], L",", &lines->elements[i]);
+    arg = wcstok(lines->elements[i], L",", (wchar_t**) &lines->elements[i]);
     start->major = wcstoull(arg, NULL, 16);
-    arg = wcstok(lines->elements[i], L",", &lines->elements[i]);
+    arg = wcstok(lines->elements[i], L",", (wchar_t**) &lines->elements[i]);
     start->minor = wcstoull(arg, NULL, 16);
-    arg = wcstok(lines->elements[i], L",", &lines->elements[i]);
+    arg = wcstok(lines->elements[i], L",", (wchar_t**) &lines->elements[i]);
     range->start = wcstoull(arg, NULL, 16);
-    arg = wcstok(lines->elements[i], L",", &lines->elements[i]);
+    arg = wcstok(lines->elements[i], L",", (wchar_t**) &lines->elements[i]);
     range->end = wcstoull(arg, NULL, 16);
+
     event->start = start;
     event->range = range;
     vect_add_element(virtual_alloc_map->map, event);
@@ -195,14 +196,12 @@ int build_virtual_alloc_map(YR_TTD_SCHEDULER* scheduler)
   Position* last = scheduler->engine->IReplayEngine->GetLastPosition(
       scheduler->engine);
 
-  unsigned long long thread_created_count =
+  size_t thread_created_count =
       scheduler->engine->IReplayEngine->GetThreadCreatedEventCount(
           scheduler->engine);
-  TTD_Replay_ThreadCreatedEvent* threads_created =
-      (TTD_Replay_ThreadCreatedEvent*) yr_malloc(
-          thread_created_count * sizeof(TTD_Replay_ThreadInfo*));
-  threads_created = scheduler->engine->IReplayEngine->GetThreadCreatedEventList(
-      scheduler->engine);
+  const TTD_Replay_ThreadCreatedEvent* threads_created =
+      scheduler->engine->IReplayEngine->GetThreadCreatedEventList(
+          scheduler->engine);
 
   // set callback
   scheduler->cursor->ICursor->SetCallReturnCallback(
@@ -211,14 +210,15 @@ int build_virtual_alloc_map(YR_TTD_SCHEDULER* scheduler)
       (unsigned long long) scheduler);
 
   // loop through all the threads
-  Position* start;
+  Position start;
   TTD_Replay_ICursorView_ReplayResult replayrez;
   for (int i = 0; i < thread_created_count; i++)
   {
-    start = &threads_created[i].pos;
+    start.major = threads_created[i].pos.major;
+    start.minor = threads_created[i].pos.minor;
 
     // set cursor to thread start
-    scheduler->cursor->ICursor->SetPosition(scheduler->cursor, start);
+    scheduler->cursor->ICursor->SetPosition(scheduler->cursor, &start);
 
     Position previous;
     unsigned long long step_count;
@@ -249,7 +249,7 @@ int build_virtual_alloc_map(YR_TTD_SCHEDULER* scheduler)
   scheduler->cursor->ICursor->SetCallReturnCallback(scheduler->cursor, 0, 0);
 
   // Save virtual alloc map
-  int len = wcslen(scheduler->path);
+  size_t len = wcslen(scheduler->path);
   wchar_t* cache_path = yr_calloc(len, sizeof(wchar_t));
   wcscpy(cache_path, scheduler->path);
   cache_path[len - 3] = L't';

@@ -144,9 +144,9 @@ int resolve_function_address(YR_TTD_SCHEDULER* sch, YR_TTD_FUNCTION* function)
   Position saved_position = *sch->cursor->ICursor->GetPosition(sch->cursor, 0);
 
   // Search if the module is used by the process
-  unsigned int module_count =
-      sch->engine->IReplayEngine->GetModuleLoadedEventCount(sch->engine);
-  TTD_Replay_ModuleLoadedEvent* modules =
+  size_t module_count = sch->engine->IReplayEngine->GetModuleLoadedEventCount(
+      sch->engine);
+  const TTD_Replay_ModuleLoadedEvent* modules =
       sch->engine->IReplayEngine->GetModuleLoadedEventList(sch->engine);
 
   unsigned int i = 0;
@@ -161,7 +161,7 @@ int resolve_function_address(YR_TTD_SCHEDULER* sch, YR_TTD_FUNCTION* function)
 
     buf = wcstok(buf, L".", NULL);
 
-    if (wcscmp(buf, function->module) == NULL)
+    if (wcscmp(buf, function->module) == 0)
       break;
 
     i++;
@@ -175,7 +175,8 @@ int resolve_function_address(YR_TTD_SCHEDULER* sch, YR_TTD_FUNCTION* function)
     return ERROR_INTERNAL_FATAL_ERROR;
   }
 
-  sch->cursor->ICursor->SetPosition(sch->cursor, &modules[i].pos);
+  Position pos = {modules[i].pos.major, modules[i].pos.minor};
+  sch->cursor->ICursor->SetPosition(sch->cursor, &pos);
 
   UINT_PTR ui_library_address = (UINT_PTR) modules[i].info->base_addr;
   UINT_PTR ui_address_array = 0;

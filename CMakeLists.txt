@@ -16,11 +16,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
-if (MSVC)
-	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT /WX")
-	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd /WX")
-endif(MSVC)
-
 # Add cmake folder for 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -32,14 +27,14 @@ if (WindbgPreview_INSTALL_PATH)
 	INSTALL_TTDREPLAY("${EXECUTABLE_OUTPUT_PATH}")
 endif (WindbgPreview_INSTALL_PATH)
 
-# The yara-ttd executable program
-add_subdirectory(yara-ttd)
-
 # Yara library
 add_subdirectory(yara)
 
 # The yarattd library
 add_subdirectory(libyarattd)
+
+# The yara-ttd executable program
+add_subdirectory(yara-ttd)
 
 # Tests
 if(BUILD_TESTS)

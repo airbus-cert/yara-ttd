@@ -11,7 +11,7 @@ typedef unsigned int(__cdecl* PROC_Create)(
     void* replay_engine_out,
     BYTE* guid_version);
 
-int init_ttd_engine(TTD_Replay_ReplayEngine** engine, wchar_t* filename);
+int init_ttd_engine(TTD_Replay_ReplayEngine** engine, const wchar_t* filename);
 
 char* base64_encode(
     const unsigned char* data,

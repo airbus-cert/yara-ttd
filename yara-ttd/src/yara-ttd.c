@@ -69,7 +69,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 typedef struct _MODULE_DATA
 {
-  const wchar_t *module_name;
+  const char *module_name;
   YR_MAPPED_FILE mapped_file;
   struct _MODULE_DATA *next;
 
@@ -735,14 +735,13 @@ static void print_scanner_error(YR_SCANNER *scanner, int error)
 
 static void print_compiler_error(
     int error_level,
-    const wchar_t *file_name,
+    const char *file_name,
     int line_number,
     const YR_RULE *rule,
-    const wchar_t *message,
+    const char *message,
     void *user_data)
 {
-  wchar_t *msg_type;
-
+  char *msg_type;
   if (error_level == YARA_ERROR_LEVEL_ERROR)
   {
     msg_type = "error";
@@ -772,7 +771,12 @@ static void print_compiler_error(
   else
   {
     fprintf(
-        stderr, "%s(%d): %s: %s\n", file_name, line_number, msg_type, message);
+        stderr,
+        "%s(%d): %s: %s\n",
+        file_name,
+        line_number,
+        msg_type,
+        message);
   }
 }
 
@@ -824,7 +828,7 @@ static int handle_message(
     YR_RULE *rule,
     void *data)
 {
-  const wchar_t *tag;
+  const char *tag;
   bool show = true;
 
   if (tags[0] != NULL)
@@ -836,9 +840,10 @@ static int handle_message(
 
     for (int i = 0; !show && tags[i] != NULL; i++)
     {
+      char *tag_a = unicode_to_ansi(tags[i]);
       yr_rule_tags_foreach(rule, tag)
       {
-        if (strcmp(tag, tags[i]) == 0)
+        if (strcmp(tag, tag_a) == 0)
         {
           show = true;
           break;
@@ -856,7 +861,8 @@ static int handle_message(
 
     for (int i = 0; !show && identifiers[i] != NULL; i++)
     {
-      if (strcmp(identifiers[i], rule->identifier) == 0)
+      char *identifier = unicode_to_ansi(identifiers[i]);
+      if (strcmp(identifier, rule->identifier) == 0)
       {
         show = true;
         break;
@@ -910,7 +916,7 @@ static int handle_message(
 
         if (meta->type == META_TYPE_INTEGER)
         {
-          wprintf(L"%hs =%PRI64d", meta->identifier, meta->integer);
+          wprintf(L"%hs =%I64d", meta->identifier, meta->integer);
         }
         else if (meta->type == META_TYPE_BOOLEAN)
         {
@@ -1074,7 +1080,7 @@ static int callback(
     return CALLBACK_CONTINUE;
 
   case CALLBACK_MSG_CONSOLE_LOG:
-    wprintf(L"%hs\n", (wchar_t *) message_data);
+    wprintf(L"%hs\n", (char *) message_data);
     return CALLBACK_CONTINUE;
   }
 
@@ -1099,9 +1105,10 @@ static int load_modules_data()
 
     if (module_data != NULL)
     {
-      module_data->module_name = modules_data[i];
+      module_data->module_name = unicode_to_ansi(modules_data[i]);
 
-      int result = yr_filemap_map(equal_sign + 1, &module_data->mapped_file);
+      char *rem = unicode_to_ansi(equal_sign + 1);
+      int result = yr_filemap_map(rem, &module_data->mapped_file);
 
       if (result != ERROR_SUCCESS)
       {
@@ -1237,12 +1244,20 @@ int wmain(int argc, const wchar_t **argv)
   yr_set_configuration_uint64(
       YR_CONFIG_MAX_PROCESS_MEMORY_CHUNK, max_process_memory_chunk);
 
-  if (scan_functions_file)
-    args_file_parse(
-        scan_functions_file, &scan_functions, MAX_ARGS_SCAN_FUNCTION);
+  if (scan_functions_file && args_file_parse(
+                                 scan_functions_file,
+                                 (wchar_t **) &scan_functions,
+                                 MAX_ARGS_SCAN_FUNCTION))
+  {
+    exit_with_code(EXIT_FAILURE);
+  }
 
-  if (scan_cursors_file)
-    args_file_parse(scan_cursors_file, &scan_cursors, MAX_ARGS_SCAN_CURSOR);
+  if (scan_cursors_file &&
+      args_file_parse(
+          scan_cursors_file, (wchar_t **) &scan_cursors, MAX_ARGS_SCAN_CURSOR))
+  {
+    exit_with_code(EXIT_FAILURE);
+  }
 
   // Try to load the rules file as a binary file containing
   // compiled rules first
@@ -1306,7 +1321,7 @@ int wmain(int argc, const wchar_t **argv)
     if (atom_quality_table != NULL)
     {
       result = yr_compiler_load_atom_quality_table(
-          compiler, atom_quality_table, 0);
+          compiler, unicode_to_ansi(atom_quality_table), 0);
 
       if (result != ERROR_SUCCESS)
       {
@@ -1362,7 +1377,7 @@ int wmain(int argc, const wchar_t **argv)
 
   if (scan_list_search && arg_is_dir)
   {
-    fprintf(stderr, L"[ERROR]: Cannot use a directory as scan list.\n");
+    fwprintf(stderr, L"[ERROR]: Cannot use a directory as scan list.\n");
     exit_with_code(EXIT_FAILURE);
   }
   else if (arg_is_dir)
@@ -1385,7 +1400,9 @@ int wmain(int argc, const wchar_t **argv)
   }
   else
   {
-    if (vect_add_element(filenames, argv[argc - 1]) != ERROR_SUCCESS)
+    wchar_t *filename = yr_calloc(wcslen(argv[argc - 1]) + 1, sizeof(wchar_t));
+    wcscpy(filename, argv[argc - 1]);
+    if (vect_add_element(filenames, filename) != ERROR_SUCCESS)
     {
       fwprintf(stderr, L"[ERROR]: Cannot add filename to vector.\n");
       exit_with_code(EXIT_FAILURE);

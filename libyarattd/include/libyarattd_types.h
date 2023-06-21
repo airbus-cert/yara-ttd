@@ -66,7 +66,7 @@ typedef struct YR_TTD_VIRTUAL_ALLOC_MAP
 typedef struct YR_TTD_SCHEDULER
 {
   // Scheduler arguments
-  wchar_t* path;               // path of the trace file
+  const wchar_t* path;         // path of the trace file
   YR_TTD_SCAN_MODE scan_mode;  // memory scan mode stategy that will be used
 
   Vect* cursors;    // cursors to scan

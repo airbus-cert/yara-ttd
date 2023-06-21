@@ -15,9 +15,9 @@ int scheduler_init(
     YR_TTD_SCHEDULER** out,
     const wchar_t* path,
     YR_TTD_SCAN_MODE scan_mode,
-    char** cursors,
-    char** functions,
-    char* cache_file);
+    wchar_t** cursors,
+    wchar_t** functions,
+    wchar_t* cache_file);
 int scheduler_add_cursor(
     YR_TTD_SCHEDULER* scheduler,
     Position* position,

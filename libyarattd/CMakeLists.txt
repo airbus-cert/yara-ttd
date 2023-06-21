@@ -31,10 +31,6 @@ set(libyarattd_INCLUDE
 	${libyarattd_STATIC_INCLUDE}/libyarattd_virtual_alloc.h
 )
 
-if(MSVC)
-	add_definitions(-DWIN32 -DUNICODE -D_UNICODE)
-endif()
-
 # Create static library
 add_library(libyarattd STATIC ${libyarattd_SRC} ${libyarattd_INCLUDE})
 
@@ -44,6 +40,12 @@ target_include_directories(
 	PUBLIC $<BUILD_INTERFACE:${libyarattd_STATIC_INCLUDE}> $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(libyarattd PUBLIC libyara)
+
+if(MSVC)
+	add_definitions(-DWIN32 -DUNICODE -D_UNICODE)
+	target_compile_options(libyarattd PUBLIC "$<$<CONFIG:DEBUG>:/MTd>" "$<$<CONFIG:DEBUG>:/WX>")
+	target_compile_options(libyarattd PUBLIC "$<$<CONFIG:RELEASE>:/MT>" "$<$<CONFIG:RELEASE>:/WX>")
+endif()
 
 install(TARGETS libyarattd EXPORT yarattd LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 install(DIRECTORY ${libyarattd_SRC_PATH}/include DESTINATION include FILES_MATCHING PATTERN "*.h*")

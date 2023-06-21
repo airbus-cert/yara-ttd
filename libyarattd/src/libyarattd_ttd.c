@@ -1,10 +1,10 @@
 
 #include <yara/error.h>
-
+#include "libyarattd_utils.h"
 #include "libyarattd_crypto.h"
 #include "libyarattd_ttd.h"
 
-int init_ttd_engine(TTD_Replay_ReplayEngine** engine, wchar_t* filename)
+int init_ttd_engine(TTD_Replay_ReplayEngine** engine, const wchar_t* filename)
 {
   HINSTANCE h_ttd_replay_library;
   PROC_Initiate InitiateReplayEngineHandshake;
@@ -71,6 +71,8 @@ int init_ttd_engine(TTD_Replay_ReplayEngine** engine, wchar_t* filename)
     fwprintf(stderr, L"Failed to generate index file\n");
     return ERROR_INTERNAL_FATAL_ERROR;
   }
+
+  return ERROR_SUCCESS;
 }
 
 char* base64_encode(

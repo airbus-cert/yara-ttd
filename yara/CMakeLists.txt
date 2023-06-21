@@ -167,17 +167,9 @@ if(WIN32)
 		/wd4267
 		/wd4996
 	)
-elseif(UNIX AND NOT APPLE)
-	target_compile_definitions(libyara PUBLIC USE_LINUX_PROC)
-	find_package(Threads REQUIRED)
-	target_link_libraries(libyara Threads::Threads m)
-	if(yara_HASH_MODULE)
-		find_package(OpenSSL REQUIRED)
-		target_compile_definitions(libyara PUBLIC HAVE_LIBCRYPTO)
-		target_link_libraries(libyara OpenSSL::Crypto OpenSSL::SSL)
-	endif()
-elseif(APPLE)
-	target_compile_definitions(libyara PUBLIC USE_MACH_PROC)
+
+	target_compile_options(libyara PUBLIC "$<$<CONFIG:DEBUG>:/MTd>")
+	target_compile_options(libyara PUBLIC "$<$<CONFIG:RELEASE>:/MT>")
 endif()
 
 # Configure TLSH function
