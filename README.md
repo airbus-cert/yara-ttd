@@ -75,12 +75,14 @@ For now, `yara-ttd` only supports Windows, because it needs to interact with the
 First build the project:
 
 ```bash
-mkdir build
-cd build
+git clone --recursive https://github.com/airbus-cert/yara-ttd.git
+mkdir yara-ttd/build
+cd yara-ttd/build
 cmake ..
 cmake --build .
 ```
 
+The executable will be built in `./bin/Debug` or `./bin/Release`
 Then, add the `TTDReplay.dll` and `TTDReplayCPU.dll` files in the same directory as the executable.
 You will find these DLL files in `%LocalAppData%\Microsoft\WindowsApps\Microsoft.WinDbg_X\TTD`
 
