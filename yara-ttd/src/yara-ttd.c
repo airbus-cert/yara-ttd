@@ -69,7 +69,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 typedef struct _MODULE_DATA
 {
-  const wchar_t *module_name;
+  const char *module_name;
   YR_MAPPED_FILE mapped_file;
   struct _MODULE_DATA *next;
 
@@ -1023,7 +1023,7 @@ static int callback(
 
     while (module_data != NULL)
     {
-      if (wcscmp(module_data->module_name, mi->module_name) == 0)
+      if (strcmp(module_data->module_name, mi->module_name) == 0)
       {
         mi->module_data = (void *) module_data->mapped_file.data;
         mi->module_data_size = module_data->mapped_file.size;
@@ -1105,7 +1105,7 @@ static int load_modules_data()
 
     if (module_data != NULL)
     {
-      module_data->module_name = modules_data[i];
+      module_data->module_name = unicode_to_ansi(modules_data[i]);
 
       char *rem = unicode_to_ansi(equal_sign + 1);
       int result = yr_filemap_map(rem, &module_data->mapped_file);
