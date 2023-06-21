@@ -1,6 +1,8 @@
 # yara-ttd - _The ultimate packer nemesis_
 
-Use YARA rules on Time Travel Debugging traces
+**Use YARA rules on Time Travel Debugging traces :hourglass_flowing_sand:**
+
+**[Watch `yara-ttd` introduction during @atxr 's rump at SSTIC 2023 (french only :baguette_bread:)](https://static.sstic.org/rumps2023/SSTIC_2023-06-08_P12_RUMPS_17.mp4)**
 
 1. [Demo](#demo)
 2. [Motivations](#motivations)
