@@ -54,23 +54,21 @@ GuestAddress get_qword_at_address(
     TTD_Replay_ICursor* cursor,
     GuestAddress address)
 {
-  MemoryBuffer* memory_buffer = (struct MemoryBuffer*) yr_malloc(
-      sizeof(struct MemoryBuffer));
-  TBuffer* buf = (struct TBuffer*) yr_malloc(sizeof(struct TBuffer));
-  if (buf == NULL || memory_buffer == NULL)
+  MemoryBuffer memory_buffer;
+  TBuffer buf;
+  buf.size = sizeof(void*);
+  buf.dst_buffer = yr_malloc(buf.size);
+
+  if (!buf.dst_buffer)
     return 0;
 
-  buf->size = sizeof(void*);
-  buf->dst_buffer = yr_malloc(buf->size);
-  cursor->ICursor->QueryMemoryBuffer(cursor, memory_buffer, address, buf, 0);
+  cursor->ICursor->QueryMemoryBuffer(cursor, &memory_buffer, address, &buf, 0);
 
-  if (memory_buffer->data == NULL)
+  if (memory_buffer.data == NULL)
     return 0;
 
-  GuestAddress value = *((GuestAddress*) memory_buffer->data);
-  yr_free(memory_buffer->data);
-  yr_free(memory_buffer);
-  yr_free(buf);
+  GuestAddress value = *((GuestAddress*) memory_buffer.data);
+  yr_free(memory_buffer.data);
   return value;
 }
 

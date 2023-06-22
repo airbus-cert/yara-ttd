@@ -371,6 +371,15 @@ int scheduler_delete(YR_TTD_SCHEDULER* scheduler)
   if (scheduler->functions)
     vect_delete(scheduler->functions);
 
+  if (scheduler->virtual_alloc_map)
+  {
+    vect_delete(scheduler->virtual_alloc_map->map);
+    yr_free(scheduler->virtual_alloc_map);
+    yr_free(scheduler->nt_allocate_virtual_memory);
+  }
+
+  scheduler->engine->IReplayEngine->Destroy_Replay_Engine(scheduler->engine);
+
   yr_free(scheduler);
   return ERROR_SUCCESS;
 }
