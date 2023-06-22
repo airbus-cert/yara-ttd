@@ -519,7 +519,7 @@ static int scan_ttd(YR_SCANNER *scanner, const wchar_t *filename)
     TRY(yr_scanner_scan_ttd(scheduler, scanner, scan_cursor));
   }
 
-  scheduler->engine->IReplayEngine->Destroy_Replay_Engine(scheduler->engine);
+  scheduler_delete(scheduler);
 
   return ERROR_SUCCESS;
 }
