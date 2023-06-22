@@ -1,6 +1,8 @@
 # yara-ttd - _The ultimate packer nemesis_
 
-Use YARA rules on Time Travel Debugging traces
+**Use YARA rules on Time Travel Debugging traces :hourglass_flowing_sand:**
+
+**[Watch `yara-ttd` introduction during @atxr 's rump at SSTIC 2023 (french only :baguette_bread:)](https://static.sstic.org/rumps2023/SSTIC_2023-06-08_P12_RUMPS_17.mp4)**
 
 1. [Demo](#demo)
 2. [Motivations](#motivations)
@@ -73,12 +75,14 @@ For now, `yara-ttd` only supports Windows, because it needs to interact with the
 First build the project:
 
 ```bash
-mkdir build
-cd build
+git clone --recursive https://github.com/airbus-cert/yara-ttd.git
+mkdir yara-ttd/build
+cd yara-ttd/build
 cmake ..
 cmake --build .
 ```
 
+The executable will be built in `./bin/Debug` or `./bin/Release`
 Then, add the `TTDReplay.dll` and `TTDReplayCPU.dll` files in the same directory as the executable.
 You will find these DLL files in `%LocalAppData%\Microsoft\WindowsApps\Microsoft.WinDbg_X\TTD`
 
