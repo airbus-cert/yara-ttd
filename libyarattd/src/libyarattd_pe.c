@@ -6,32 +6,34 @@
 // get the VA of the modules NT Header
 PIMAGE_DOS_HEADER get_dos_header(
     YR_TTD_SCHEDULER* sch,
-    GuestAddress ui_library_address,
-    MemoryBuffer* memory_buffer,
-    TBuffer* buf)
+    GuestAddress ui_library_address)
 {
-  buf->size = sizeof(IMAGE_DOS_HEADER);
-  buf->dst_buffer = yr_malloc(buf->size);
+  MemoryBuffer memory_buffer;
+  TBuffer buf;
+
+  buf.size = sizeof(IMAGE_DOS_HEADER);
+  buf.dst_buffer = yr_malloc(buf.size);
   sch->cursor->ICursor->QueryMemoryBuffer(
-      sch->cursor, memory_buffer, (GuestAddress) ui_library_address, buf, 0);
-  return (PIMAGE_DOS_HEADER) buf->dst_buffer;
+      sch->cursor, &memory_buffer, (GuestAddress) ui_library_address, &buf, 0);
+  return (PIMAGE_DOS_HEADER) buf.dst_buffer;
 }
 
 PIMAGE_NT_HEADERS get_nt_headers(
     YR_TTD_SCHEDULER* sch,
     GuestAddress ui_library_address,
-    PIMAGE_DOS_HEADER dos_header,
-    MemoryBuffer* memory_buffer,
-    TBuffer* buf)
+    PIMAGE_DOS_HEADER dos_header)
 {
+  MemoryBuffer memory_buffer;
+  TBuffer buf;
+
   PIMAGE_NT_HEADERS p_nt_headers =
       (PIMAGE_NT_HEADERS) (ui_library_address + dos_header->e_lfanew);
-  buf->size = sizeof(IMAGE_NT_HEADERS);
-  buf->dst_buffer = yr_malloc(buf->size);
+  buf.size = sizeof(IMAGE_NT_HEADERS);
+  buf.dst_buffer = yr_malloc(buf.size);
   sch->cursor->ICursor->QueryMemoryBuffer(
-      sch->cursor, memory_buffer, (GuestAddress) p_nt_headers, buf, 0);
+      sch->cursor, &memory_buffer, (GuestAddress) p_nt_headers, &buf, 0);
 
-  return (PIMAGE_NT_HEADERS) buf->dst_buffer;
+  return (PIMAGE_NT_HEADERS) buf.dst_buffer;
 }
 
 PIMAGE_DATA_DIRECTORY get_data_directory(PIMAGE_NT_HEADERS p_nt_headers)
@@ -43,35 +45,37 @@ PIMAGE_DATA_DIRECTORY get_data_directory(PIMAGE_NT_HEADERS p_nt_headers)
 PIMAGE_EXPORT_DIRECTORY get_export_directory(
     YR_TTD_SCHEDULER* sch,
     GuestAddress ui_library_address,
-    PIMAGE_DATA_DIRECTORY p_data_directory,
-    MemoryBuffer* memory_buffer,
-    TBuffer* buf)
+    PIMAGE_DATA_DIRECTORY p_data_directory)
 {
+  MemoryBuffer memory_buffer;
+  TBuffer buf;
+
   // get the VA of the export directory
   GuestAddress address =
       (GuestAddress) (ui_library_address + p_data_directory->VirtualAddress);
 
-  buf->size = sizeof(IMAGE_EXPORT_DIRECTORY);
-  buf->dst_buffer = yr_malloc(buf->size);
+  buf.size = sizeof(IMAGE_EXPORT_DIRECTORY);
+  buf.dst_buffer = yr_malloc(buf.size);
   sch->cursor->ICursor->QueryMemoryBuffer(
-      sch->cursor, memory_buffer, address, buf, 0);
+      sch->cursor, &memory_buffer, address, &buf, 0);
 
-  return (PIMAGE_EXPORT_DIRECTORY) buf->dst_buffer;
+  return (PIMAGE_EXPORT_DIRECTORY) buf.dst_buffer;
 }
 
 DWORD* get_function_names(
     YR_TTD_SCHEDULER* sch,
     GuestAddress ui_name_array,
-    PIMAGE_EXPORT_DIRECTORY p_export_directory,
-    MemoryBuffer* memory_buffer,
-    TBuffer* buf)
+    PIMAGE_EXPORT_DIRECTORY p_export_directory)
 {
-  buf->size = sizeof(DWORD*) * p_export_directory->NumberOfFunctions;
-  buf->dst_buffer = yr_malloc(buf->size);
-  sch->cursor->ICursor->QueryMemoryBuffer(
-      sch->cursor, memory_buffer, ui_name_array, buf, 0);
+  MemoryBuffer memory_buffer;
+  TBuffer buf;
 
-  return (DWORD*) buf->dst_buffer;
+  buf.size = sizeof(DWORD*) * p_export_directory->NumberOfFunctions;
+  buf.dst_buffer = yr_malloc(buf.size);
+  sch->cursor->ICursor->QueryMemoryBuffer(
+      sch->cursor, &memory_buffer, ui_name_array, &buf, 0);
+
+  return (DWORD*) buf.dst_buffer;
 }
 
 GuestAddress get_given_function_address(
@@ -81,21 +85,21 @@ GuestAddress get_given_function_address(
     GuestAddress ui_name_ordinals,
     GuestAddress ui_address_array,
     DWORD* p_function_names,
-    PIMAGE_EXPORT_DIRECTORY p_export_directory,
-    MemoryBuffer* memory_buffer,
-    TBuffer* buf)
+    PIMAGE_EXPORT_DIRECTORY p_export_directory)
 {
-  buf->size = sizeof(char) *
-              MAX_LENGTH_FUNCTION_NAME;  // max function name length
-  char* name_a = (char*) yr_malloc(buf->size);
+  MemoryBuffer memory_buffer;
+  TBuffer buf;
+
+  buf.size = sizeof(char) * MAX_LENGTH_FUNCTION_NAME;
+  char* name_a = (char*) yr_malloc(buf.size);
   for (int j = 0; j < (int) p_export_directory->NumberOfNames; j++)
   {
-    buf->dst_buffer = name_a;
+    buf.dst_buffer = name_a;
     sch->cursor->ICursor->QueryMemoryBuffer(
         sch->cursor,
-        memory_buffer,
+        &memory_buffer,
         (GuestAddress) (ui_library_address + p_function_names[j]),
-        buf,
+        &buf,
         0);
 
     // convert name to wchar_t
@@ -104,28 +108,28 @@ GuestAddress get_given_function_address(
 
     if (wcscmp(name_w, function->name) == 0)
     {
-      buf->size = sizeof(DWORD);
-      buf->dst_buffer = (void*) yr_malloc(buf->size);
+      buf.size = sizeof(DWORD);
+      buf.dst_buffer = (void*) yr_malloc(buf.size);
       sch->cursor->ICursor->QueryMemoryBuffer(
           sch->cursor,
-          memory_buffer,
+          &memory_buffer,
           (GuestAddress) (ui_name_ordinals + j * sizeof(WORD)),
-          buf,
+          &buf,
           0);
+      WORD* ordinal = buf.dst_buffer;
 
-      WORD* ordinal = buf->dst_buffer;
-      buf->size = sizeof(LPVOID);
+      buf.size = sizeof(LPVOID);
       sch->cursor->ICursor->QueryMemoryBuffer(
           sch->cursor,
-          memory_buffer,
+          &memory_buffer,
           (GuestAddress) (ui_address_array + *ordinal * sizeof(DWORD)),
-          buf,
+          &buf,
           0);
 
-      DWORD* offset = buf->dst_buffer;
+      DWORD* offset = buf.dst_buffer;
       GuestAddress address = (GuestAddress) (ui_library_address + *offset);
 
-      yr_free(buf->dst_buffer);
+      yr_free(buf.dst_buffer);
       yr_free(name_a);
 
       return address;
@@ -184,22 +188,15 @@ int resolve_function_address(YR_TTD_SCHEDULER* sch, YR_TTD_FUNCTION* function)
   UINT_PTR ui_name_array = 0;
   UINT_PTR ui_name_ordinals = 0;
 
-  MemoryBuffer* memory_buffer = (struct MemoryBuffer*) yr_malloc(
-      sizeof(struct MemoryBuffer));
-  TBuffer* buf = (struct TBuffer*) yr_malloc(sizeof(struct TBuffer));
-  if (buf == NULL || memory_buffer == NULL)
-    return ERROR_INTERNAL_FATAL_ERROR;
-
-  PIMAGE_DOS_HEADER dos_header = get_dos_header(
-      sch, ui_library_address, memory_buffer, buf);
+  PIMAGE_DOS_HEADER dos_header = get_dos_header(sch, ui_library_address);
 
   PIMAGE_NT_HEADERS p_nt_headers = get_nt_headers(
-      sch, ui_library_address, dos_header, memory_buffer, buf);
+      sch, ui_library_address, dos_header);
 
   PIMAGE_DATA_DIRECTORY p_data_directory = get_data_directory(p_nt_headers);
 
   PIMAGE_EXPORT_DIRECTORY p_export_directory = get_export_directory(
-      sch, ui_library_address, p_data_directory, memory_buffer, buf);
+      sch, ui_library_address, p_data_directory);
 
   // get the VA for the array of addresses
   ui_address_array =
@@ -213,7 +210,7 @@ int resolve_function_address(YR_TTD_SCHEDULER* sch, YR_TTD_FUNCTION* function)
       (ui_library_address + p_export_directory->AddressOfNameOrdinals);
 
   DWORD* p_function_names = get_function_names(
-      sch, ui_name_array, p_export_directory, memory_buffer, buf);
+      sch, ui_name_array, p_export_directory);
 
   function->address = get_given_function_address(
       sch,
@@ -222,16 +219,12 @@ int resolve_function_address(YR_TTD_SCHEDULER* sch, YR_TTD_FUNCTION* function)
       ui_name_ordinals,
       ui_address_array,
       p_function_names,
-      p_export_directory,
-      memory_buffer,
-      buf);
+      p_export_directory);
 
   yr_free(dos_header);
   yr_free(p_nt_headers);
   yr_free(p_export_directory);
   yr_free(p_function_names);
-  yr_free(buf);
-  yr_free(memory_buffer);
 
   sch->cursor->ICursor->SetPosition(sch->cursor, &saved_position);
   return ERROR_SUCCESS;
