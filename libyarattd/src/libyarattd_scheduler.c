@@ -15,14 +15,22 @@ int init_scan_cursors(YR_TTD_SCHEDULER* scheduler, wchar_t** scan_cursor_arg)
 
   for (int i = 0; scan_cursor_arg[i]; i++)
   {
-    Position* scan_cursor = (Position*) yr_malloc(sizeof(Position));
+    YR_TTD_POSITION* scan_cursor = (YR_TTD_POSITION*) yr_malloc(
+        sizeof(YR_TTD_POSITION));
     if (!scan_cursor)
       return ERROR_INTERNAL_FATAL_ERROR;
 
     wchar_t* end;
     scan_cursor->major = wcstoull(scan_cursor_arg[i], &end, 16);
     scan_cursor->minor = wcstoull(end + 1, NULL, 16);
-    TRY(scheduler_add_cursor(scheduler, scan_cursor, L"yara-ttd -T"));
+
+    TRY(scheduler_add_cursor(scheduler, scan_cursor));
+
+    fwprintf(
+        stdout,
+        L"Found cursor %llx:%llx: cursor argument\n",
+        scan_cursor->major,
+        scan_cursor->minor);
   }
 
   return ERROR_SUCCESS;
@@ -86,7 +94,6 @@ int init_scan_functions(YR_TTD_SCHEDULER* scheduler, wchar_t** scan_functions)
 // Default scan mode
 int init_scan_default(YR_TTD_SCHEDULER* scheduler)
 {
-  Position pos;
   size_t exception_count = scheduler->engine->IReplayEngine
                                ->GetExceptionEventCount(scheduler->engine);
   const TTD_Replay_ExceptionEvent* exceptions =
@@ -95,21 +102,18 @@ int init_scan_default(YR_TTD_SCHEDULER* scheduler)
 
   for (unsigned int i = 0; i < exception_count; i++)
   {
-    int length = swprintf(
-        NULL,
-        0,
-        L"Exception raised with code 0x%x",
-        exceptions[i].info->ExceptionCode);
-    wchar_t* source = (wchar_t*) yr_calloc(length + 1, sizeof(wchar_t));
-    swprintf(
-        source,
-        length + 1,
-        L"Exception raised with code 0x%x",
-        exceptions[i].info->ExceptionCode);
+    YR_TTD_POSITION* pos = yr_malloc(sizeof(YR_TTD_POSITION));
+    pos->major = exceptions[i].pos.major;
+    pos->minor = exceptions[i].pos.minor;
 
-    pos.major = exceptions[i].pos.major;
-    pos.minor = exceptions[i].pos.minor;
-    scheduler_add_cursor(scheduler, &pos, source);
+    TRY(scheduler_add_cursor(scheduler, pos));
+
+    fwprintf(
+        stdout,
+        L"Found cursor %llx:%llx: Exception raised with code 0x%x\n",
+        pos->major,
+        pos->minor,
+        exceptions[i].info->ExceptionCode);
   }
 
   size_t thread_created_count =
@@ -121,26 +125,18 @@ int init_scan_default(YR_TTD_SCHEDULER* scheduler)
 
   for (unsigned int i = 0; i < thread_created_count; i++)
   {
-    Position pos = {
-        threads_created[i].pos.major,
-        threads_created[i].pos.minor,
-    };
-    scheduler->cursor->ICursor->SetPosition(scheduler->cursor, &pos);
-    Position* current = scheduler->cursor->ICursor->GetPosition(
-        scheduler->cursor, 0);
+    YR_TTD_POSITION* pos = yr_malloc(sizeof(YR_TTD_POSITION));
+    pos->major = threads_created[i].pos.major;
+    pos->minor = threads_created[i].pos.minor;
 
-    int length = swprintf(
-        NULL, 0, L"Thread 0x%x activated", threads_created[i].info->threadid);
-    wchar_t* source = (wchar_t*) yr_calloc(length + 1, sizeof(wchar_t));
-    swprintf(
-        source,
-        length + 1,
-        L"Thread 0x%x activated",
+    TRY(scheduler_add_cursor(scheduler, pos));
+
+    fwprintf(
+        stdout,
+        L"Found cursor %llx:%llx: Thread 0x%x activated\n",
+        pos->major,
+        pos->minor,
         threads_created[i].info->threadid);
-
-    pos.major = exceptions[i].pos.major;
-    pos.minor = exceptions[i].pos.minor;
-    scheduler_add_cursor(scheduler, &pos, source);
   }
 
   size_t module_count = scheduler->engine->IReplayEngine
@@ -149,7 +145,7 @@ int init_scan_default(YR_TTD_SCHEDULER* scheduler)
       scheduler->engine->IReplayEngine->GetModuleLoadedEventList(
           scheduler->engine);
 
-  Position* first = scheduler->engine->IReplayEngine->GetFirstPosition(
+  YR_TTD_POSITION* first = scheduler->engine->IReplayEngine->GetFirstPosition(
       scheduler->engine);
 
   for (unsigned int i = 0; i < module_count; i++)
@@ -158,13 +154,18 @@ int init_scan_default(YR_TTD_SCHEDULER* scheduler)
     if (modules[i].pos.major <= first->major)
       continue;
 
-    int length = swprintf(NULL, 0, L"Module %s loaded", modules[i].info->path);
-    wchar_t* source = (wchar_t*) yr_calloc(length + 1, sizeof(wchar_t));
-    swprintf(source, length + 1, L"Module %s loaded", modules[i].info->path);
+    YR_TTD_POSITION* pos = yr_malloc(sizeof(YR_TTD_POSITION));
+    pos->major = modules[i].pos.major;
+    pos->minor = modules[i].pos.minor;
 
-    pos.major = exceptions[i].pos.major;
-    pos.minor = exceptions[i].pos.minor;
-    scheduler_add_cursor(scheduler, &pos, source);
+    TRY(scheduler_add_cursor(scheduler, pos));
+
+    fwprintf(
+        stdout,
+        L"Found cursor %llx:%llx: Module %s loaded\n",
+        pos->major,
+        pos->minor,
+        modules[i].info->path);
   }
 
   return ERROR_SUCCESS;
@@ -255,40 +256,29 @@ int scheduler_init(
   return ERROR_SUCCESS;
 }
 
-int scheduler_add_cursor(
-    YR_TTD_SCHEDULER* scheduler,
-    Position* position,
-    wchar_t* source)
+int scheduler_add_cursor(YR_TTD_SCHEDULER* scheduler, YR_TTD_POSITION* position)
 {
   // Check if it's possible to set the position
   scheduler->cursor->ICursor->SetPosition(scheduler->cursor, position);
-  Position* check = scheduler->cursor->ICursor->GetPosition(
+  YR_TTD_POSITION* check = scheduler->cursor->ICursor->GetPosition(
       scheduler->cursor, 0);
   if (check->major != position->major || check->minor != position->minor)
-    memcpy(position, check, sizeof(Position));
+    memcpy(position, check, sizeof(YR_TTD_POSITION));
 
   // If the scheduler is not empty, search for the cursor in the elements
   if (scheduler->cursors->count)
   {
     for (int i = 0; i < scheduler->cursors->count; i++)
     {
-      YR_TTD_SCAN_CURSOR* cursor = scheduler->cursors->elements[i];
-      if (cursor->position->major == position->major &&
-          cursor->position->minor == position->minor)
-      {
-        int length = swprintf(NULL, 0, L"%s and %s", cursor->source, source);
-        yr_realloc(cursor->source, (length + 1) * sizeof(wchar_t));
-        swprintf(cursor->source, length, L"%s and %s", cursor->source, source);
+      YR_TTD_POSITION* cursor = scheduler->cursors->elements[i];
+
+      // If the cursor is already in the list, skip it
+      if (cursor->major == position->major && cursor->minor == position->minor)
         return ERROR_SUCCESS;
-      }
     }
   }
 
-  YR_TTD_SCAN_CURSOR* new_cursor = (YR_TTD_SCAN_CURSOR*) yr_malloc(
-      sizeof(YR_TTD_SCAN_CURSOR));
-  new_cursor->position = position;
-  new_cursor->source = source;
-  TRY(vect_add_element(scheduler->cursors, new_cursor));
+  TRY(vect_add_element(scheduler->cursors, position));
   return ERROR_SUCCESS;
 }
 
@@ -296,9 +286,9 @@ int scheduler_add_cursors_from_function(
     YR_TTD_SCHEDULER* scheduler,
     YR_TTD_FUNCTION* function)
 {
-  Position* first = scheduler->engine->IReplayEngine->GetFirstPosition(
+  YR_TTD_POSITION* first = scheduler->engine->IReplayEngine->GetFirstPosition(
       scheduler->engine);
-  Position* last = scheduler->engine->IReplayEngine->GetLastPosition(
+  YR_TTD_POSITION* last = scheduler->engine->IReplayEngine->GetLastPosition(
       scheduler->engine);
 
   // Set breakpoint at function address
@@ -309,7 +299,7 @@ int scheduler_add_cursors_from_function(
   data.flags = TTD_BP_FLAGS_EXEC;
   scheduler->cursor->ICursor->AddMemoryWatchpoint(scheduler->cursor, &data);
 
-  Position* current = NULL;
+  YR_TTD_POSITION* current = NULL;
   TTD_Replay_ICursorView_ReplayResult replayrez;
 
   // Save all the calls to the function
@@ -324,24 +314,22 @@ int scheduler_add_cursors_from_function(
       break;
 
     // Add the current position to the map
-    Position* position_to_scan = (Position*) yr_malloc(sizeof(Position));
+    YR_TTD_POSITION* position_to_scan = (YR_TTD_POSITION*) yr_malloc(
+        sizeof(YR_TTD_POSITION));
     if (!position_to_scan)
       return ERROR_INTERNAL_FATAL_ERROR;
     position_to_scan->major = current->major;
     position_to_scan->minor = current->minor;
 
-    // FIXME BUG MISSING 1 CHARACTER
-    int length = swprintf(
-        NULL, 0, L"Function %s!%s called", function->module, function->name);
-    wchar_t* source = (wchar_t*) yr_calloc(length + 1, sizeof(wchar_t));
-    swprintf(
-        source,
-        length,
-        L"Function %s!%s called",
+    TRY(scheduler_add_cursor(scheduler, position_to_scan));
+
+    fwprintf(
+        stdout,
+        L"Found cursor %llx:%llx: Function %s!%s called\n",
+        position_to_scan->major,
+        position_to_scan->minor,
         function->module,
         function->name);
-
-    TRY(scheduler_add_cursor(scheduler, position_to_scan, source));
 
     // Move forward of 1 instruction, otherwise sometimes the cursor is stuck on
     // the breakpoint

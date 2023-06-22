@@ -20,8 +20,7 @@ int scheduler_init(
     wchar_t* cache_file);
 int scheduler_add_cursor(
     YR_TTD_SCHEDULER* scheduler,
-    Position* position,
-    wchar_t* source);
+    YR_TTD_POSITION* position);
 int scheduler_add_function(
     YR_TTD_SCHEDULER* scheduler,
     YR_TTD_FUNCTION* new_function);
