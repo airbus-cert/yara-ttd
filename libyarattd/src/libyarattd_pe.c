@@ -141,7 +141,8 @@ int resolve_function_address(YR_TTD_SCHEDULER* sch, YR_TTD_FUNCTION* function)
   function->address = 0;
 
   // Save current cursor position
-  Position saved_position = *sch->cursor->ICursor->GetPosition(sch->cursor, 0);
+  YR_TTD_POSITION saved_position = *sch->cursor->ICursor->GetPosition(
+      sch->cursor, 0);
 
   // Search if the module is used by the process
   size_t module_count = sch->engine->IReplayEngine->GetModuleLoadedEventCount(
@@ -175,7 +176,7 @@ int resolve_function_address(YR_TTD_SCHEDULER* sch, YR_TTD_FUNCTION* function)
     return ERROR_INTERNAL_FATAL_ERROR;
   }
 
-  Position pos = {modules[i].pos.major, modules[i].pos.minor};
+  YR_TTD_POSITION pos = {modules[i].pos.major, modules[i].pos.minor};
   sch->cursor->ICursor->SetPosition(sch->cursor, &pos);
 
   UINT_PTR ui_library_address = (UINT_PTR) modules[i].info->base_addr;

@@ -7,12 +7,12 @@
 YR_API int yr_scanner_scan_ttd(
     YR_TTD_SCHEDULER* scheduler,
     YR_SCANNER* scanner,
-    YR_TTD_SCAN_CURSOR* scan_cursor);
+    YR_TTD_POSITION* scan_cursor);
 
 YR_API int yr_ttd_open_iterator(
     YR_TTD_SCHEDULER* scheduler,
     YR_MEMORY_BLOCK_ITERATOR* iterator,
-    YR_TTD_SCAN_CURSOR* scan_cursor);
+    YR_TTD_POSITION* scan_cursor);
 
 YR_API YR_MEMORY_BLOCK* yr_ttd_get_first_memory_block(
     YR_MEMORY_BLOCK_ITERATOR* iterator);

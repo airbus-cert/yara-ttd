@@ -11,20 +11,20 @@ int virtual_alloc_callback(
   YR_TTD_SCHEDULER* sch = (YR_TTD_SCHEDULER*) callback_value;
   if (addr_func == sch->nt_allocate_virtual_memory->address)
   {
-    Position save = *sch->cursor->ICursor->GetPosition(sch->cursor, 0);
+    YR_TTD_POSITION save = *sch->cursor->ICursor->GetPosition(sch->cursor, 0);
 
     YR_TTD_EVENT* event = (YR_TTD_EVENT*) yr_malloc(sizeof(YR_TTD_EVENT));
     YR_TTD_MEMORY_RANGE* range = (YR_TTD_MEMORY_RANGE*) yr_malloc(
         sizeof(YR_TTD_MEMORY_RANGE));
     if (!event || !range)
       return CALLBACK_ERROR;
-    event->start = (Position*) yr_malloc(sizeof(Position));
-    // event->end = (Position*) yr_malloc(sizeof(Position));
+    event->start = (YR_TTD_POSITION*) yr_malloc(sizeof(YR_TTD_POSITION));
+    // event->end = (YR_TTD_POSITION*) yr_malloc(sizeof(YR_TTD_POSITION));
     if (!event->start)
       return CALLBACK_ERROR;
 
     // Set the cursor at the callback position
-    Position* current = thread_info->IThreadView->GetPosition(thread_info);
+    YR_TTD_POSITION* current = thread_info->IThreadView->GetPosition(thread_info);
     sch->cursor->ICursor->SetPosition(sch->cursor, current);
 
     // Fetch context
@@ -55,10 +55,10 @@ int virtual_alloc_callback(
       sch->virtual_alloc_map->ret_address &&
       sch->virtual_alloc_map->ret_address == addr_func)
   {
-    Position save = *sch->cursor->ICursor->GetPosition(sch->cursor, 0);
+    YR_TTD_POSITION save = *sch->cursor->ICursor->GetPosition(sch->cursor, 0);
 
     // Set the cursor at the callback position
-    Position* current = thread_info->IThreadView->GetPosition(thread_info);
+    YR_TTD_POSITION* current = thread_info->IThreadView->GetPosition(thread_info);
     sch->cursor->ICursor->SetPosition(sch->cursor, current);
 
     GuestAddress returned = get_qword_at_address(
@@ -84,12 +84,12 @@ int virtual_alloc_callback(
 int get_virtual_alloc_ranges(YR_TTD_ITERATOR_CTX* ctx)
 {
   int k = 0;
-  Position* current = ctx->cursor->ICursor->GetPosition(ctx->cursor, 0);
+  YR_TTD_POSITION* current = ctx->cursor->ICursor->GetPosition(ctx->cursor, 0);
   for (int i = 0; i < ctx->virtual_alloc_map->map->count; i++)
   {
     YR_TTD_EVENT* event = (YR_TTD_EVENT*)
                               ctx->virtual_alloc_map->map->elements[i];
-    Position* start = event->start;
+    YR_TTD_POSITION* start = event->start;
 
     // Test if current is between start and end
     if (start->major == -1 || start->major < current->major ||
@@ -166,7 +166,7 @@ int build_virtual_alloc_map_from_cache(
 
   for (int i = 0; i < lines->count; i++)
   {
-    Position* start = yr_malloc(sizeof(Position));
+    YR_TTD_POSITION* start = yr_malloc(sizeof(YR_TTD_POSITION));
     YR_TTD_EVENT* event = yr_malloc(sizeof(YR_TTD_EVENT));
     YR_TTD_MEMORY_RANGE* range = yr_malloc(sizeof(YR_TTD_MEMORY_RANGE));
     arg = wcstok(lines->elements[i], L",", (wchar_t**) &lines->elements[i]);
@@ -193,7 +193,7 @@ int build_virtual_alloc_map_from_cache(
 int build_virtual_alloc_map(YR_TTD_SCHEDULER* scheduler)
 {
   // Save current cursor position
-  Position* last = scheduler->engine->IReplayEngine->GetLastPosition(
+  YR_TTD_POSITION* last = scheduler->engine->IReplayEngine->GetLastPosition(
       scheduler->engine);
 
   size_t thread_created_count =
@@ -210,7 +210,7 @@ int build_virtual_alloc_map(YR_TTD_SCHEDULER* scheduler)
       (unsigned long long) scheduler);
 
   // loop through all the threads
-  Position start;
+  YR_TTD_POSITION start;
   TTD_Replay_ICursorView_ReplayResult replayrez;
   for (int i = 0; i < thread_created_count; i++)
   {
@@ -220,12 +220,12 @@ int build_virtual_alloc_map(YR_TTD_SCHEDULER* scheduler)
     // set cursor to thread start
     scheduler->cursor->ICursor->SetPosition(scheduler->cursor, &start);
 
-    Position previous;
+    YR_TTD_POSITION previous;
     unsigned long long step_count;
 
     for (;;)
     {
-      Position* now = scheduler->cursor->ICursor->GetPosition(
+      YR_TTD_POSITION* now = scheduler->cursor->ICursor->GetPosition(
           scheduler->cursor, 0);
       scheduler->cursor->ICursor->ReplayForward(
           scheduler->cursor, &replayrez, last, STEP_FORWARD);

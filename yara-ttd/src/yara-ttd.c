@@ -495,17 +495,6 @@ static int scan_ttd(YR_SCANNER *scanner, const wchar_t *filename)
   if (!scheduler)
     return ERROR_INTERNAL_FATAL_ERROR;
 
-  wprintf(L"Cursor(s) found:\n");
-  for (int i = 0; i < scheduler->cursors->count; i++)
-  {
-    YR_TTD_SCAN_CURSOR *scan_cursor = scheduler->cursors->elements[i];
-    wprintf(
-        L"Scanning %llx:%llx (%s)\n",
-        scan_cursor->position->major,
-        scan_cursor->position->minor,
-        scan_cursor->source);
-  }
-
   if (scan_mode == SCAN_MODE_VIRTUAL_ALLOC)
   {
     wprintf(L"\nVirtual Allocated map:\n");
@@ -526,7 +515,7 @@ static int scan_ttd(YR_SCANNER *scanner, const wchar_t *filename)
 
   for (int i = 0; i < scheduler->cursors->count; i++)
   {
-    YR_TTD_SCAN_CURSOR *scan_cursor = scheduler->cursors->elements[i];
+    YR_TTD_POSITION *scan_cursor = scheduler->cursors->elements[i];
     TRY(yr_scanner_scan_ttd(scheduler, scanner, scan_cursor));
   }
 
@@ -771,12 +760,7 @@ static void print_compiler_error(
   else
   {
     fprintf(
-        stderr,
-        "%s(%d): %s: %s\n",
-        file_name,
-        line_number,
-        msg_type,
-        message);
+        stderr, "%s(%d): %s: %s\n", file_name, line_number, msg_type, message);
   }
 }
 
@@ -876,8 +860,8 @@ static int handle_message(
 
   if (show && !print_count_only)
   {
-    Position *position = ((YR_TTD_ITERATOR_CTX *) context->iterator->context)
-                             ->scan_cursor->position;
+    YR_TTD_POSITION *position =
+        ((YR_TTD_ITERATOR_CTX *) context->iterator->context)->scan_cursor;
     wprintf(L"%llx:%llx @ ", position->major, position->minor);
 
     if (show_namespace)

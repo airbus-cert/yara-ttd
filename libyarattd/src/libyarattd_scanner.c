@@ -7,7 +7,7 @@
 YR_API int yr_scanner_scan_ttd(
     YR_TTD_SCHEDULER* scheduler,
     YR_SCANNER* scanner,
-    YR_TTD_SCAN_CURSOR* scan_cursor)
+    YR_TTD_POSITION* scan_cursor)
 {
   if (scheduler->scan_mode < 0 || scheduler->scan_mode > 2)
     return ERROR_WRONG_ARGUMENTS;
@@ -29,7 +29,7 @@ YR_API int yr_scanner_scan_ttd(
 YR_API int yr_ttd_open_iterator(
     YR_TTD_SCHEDULER* scheduler,
     YR_MEMORY_BLOCK_ITERATOR* iterator,
-    YR_TTD_SCAN_CURSOR* scan_cursor)
+    YR_TTD_POSITION* scan_cursor)
 {
   YR_TTD_ITERATOR_CTX* context = (YR_TTD_ITERATOR_CTX*) yr_malloc(
       sizeof(YR_TTD_ITERATOR_CTX));
@@ -43,10 +43,10 @@ YR_API int yr_ttd_open_iterator(
   context->virtual_alloc_map = scheduler->virtual_alloc_map;
 
   context->scan_cursor = scan_cursor;
-  context->cursor->ICursor->SetPosition(context->cursor, scan_cursor->position);
-  Position* check = context->cursor->ICursor->GetPosition(context->cursor, 0);
-  if (check->major != scan_cursor->position->major ||
-      check->minor != scan_cursor->position->minor)
+  context->cursor->ICursor->SetPosition(context->cursor, scan_cursor);
+  YR_TTD_POSITION* check = context->cursor->ICursor->GetPosition(
+      context->cursor, 0);
+  if (check->major != scan_cursor->major || check->minor != scan_cursor->minor)
     wprintf(
         L"[WARNING] Fail to set scan position, scanning %llx:%llx instead\n",
         check->major,

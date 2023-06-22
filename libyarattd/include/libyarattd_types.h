@@ -17,6 +17,8 @@
     return ERROR_INTERNAL_FATAL_ERROR; \
   }
 
+typedef Position YR_TTD_POSITION;
+
 // Describes a function name, module and address
 typedef struct YR_TTD_FUNCTION
 {
@@ -47,8 +49,8 @@ typedef struct YR_TTD_EVENT
   YR_TTD_MEMORY_RANGE* range;
 
   // Time position
-  Position* start;
-  Position* end;
+  YR_TTD_POSITION* start;
+  YR_TTD_POSITION* end;
 } YR_TTD_EVENT;
 
 // Holds the virtual alloc map to keep track of the heap at a given time
@@ -81,14 +83,6 @@ typedef struct YR_TTD_SCHEDULER
   TTD_Replay_ICursor* cursor;       // TTD cursor
 } YR_TTD_SCHEDULER;
 
-// Improved position to describe the cursors to scan
-typedef struct YR_TTD_SCAN_CURSOR
-{
-  Position* position;
-  wchar_t*
-      source;  // A short string to describe where does this cursor come from
-} YR_TTD_SCAN_CURSOR;
-
 // Iterator context to keep track of scan data for yara
 typedef struct _YR_TTD_ITERATOR_CTX
 {
@@ -111,7 +105,7 @@ typedef struct _YR_TTD_ITERATOR_CTX
   unsigned int
       current_memory_range;    // Current memory range index in the memory_map
   YR_TTD_SCAN_MODE scan_mode;  // Memory scan strategy
-  YR_TTD_SCAN_CURSOR* scan_cursor;  // position of the scan cursor
+  YR_TTD_POSITION* scan_cursor;  // position of the scan cursor
 
   YR_TTD_VIRTUAL_ALLOC_MAP*
       virtual_alloc_map;  // map to trace the heap at a given position
