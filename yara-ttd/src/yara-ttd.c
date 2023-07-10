@@ -1291,7 +1291,7 @@ int wmain(int argc, const wchar_t **argv)
 
   if (result != ERROR_SUCCESS)
   {
-    fprintf(stderr, "error: initialization error (%d)\n", result);
+    fprintf(stderr, "[ERROR] Initialization error (%d)\n", result);
     exit_with_code(EXIT_FAILURE);
   }
 
@@ -1331,7 +1331,7 @@ int wmain(int argc, const wchar_t **argv)
     {
       fprintf(
           stderr,
-          "error: can't accept multiple rules files if one of them is in "
+          "[ERROR] Can't accept multiple rules files if one of them is in "
           "compiled form.\n");
       exit_with_code(EXIT_FAILURE);
     }
@@ -1341,7 +1341,6 @@ int wmain(int argc, const wchar_t **argv)
     // yr_rules_load_stream for loading the rules from it.
 
     FILE *fh = _wfopen(argv[0], L"rb");
-
     if (fh != NULL)
     {
       YR_STREAM stream;
