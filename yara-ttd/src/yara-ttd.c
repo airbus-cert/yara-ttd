@@ -27,9 +27,11 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <windows.h>
+
 #include <fcntl.h>
 #include <io.h>
-#include <windows.h>
+#include <wincrypt.h>
 
 #include <ctype.h>
 #include <libyarattd_common.h>
@@ -60,6 +62,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MAX_ARGS_EXT_VAR     32
 #define MAX_ARGS_MODULE_DATA 32
 #define MAX_QUEUED_FILES     64
+
+#define MD5LEN 16
 
 #define exit_with_code(code) \
   {                          \
@@ -1128,6 +1132,68 @@ static void unload_modules_data()
   }
 
   modules_data_list = NULL;
+}
+
+int get_tmp_folder_name(WCHAR *out, WCHAR data[], DWORD len_data)
+{
+  int dwStatus = 0;
+  HCRYPTPROV hProv = 0;
+  HCRYPTHASH hHash = 0;
+  DWORD cbHash = 0;
+  WCHAR rgbDigits[] = L"0123456789abcdef";
+  BYTE rgbHash[MD5LEN];
+
+  // Get handle to the crypto provider
+  if (!CryptAcquireContext(
+          &hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
+  {
+    dwStatus = GetLastError();
+    fwprintf(stderr, L"CryptAcquireContext failed: %d\n", dwStatus);
+    return dwStatus;
+  }
+
+  if (!CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash))
+  {
+    dwStatus = GetLastError();
+    fwprintf(stderr, L"CryptAcquireContext failed: %d\n", dwStatus);
+    CryptReleaseContext(hProv, 0);
+    return dwStatus;
+  }
+
+  BYTE data_b[MAX_PATH] = {0};
+  wcstombs(data_b, data, len_data);
+  if (!CryptHashData(hHash, data_b, len_data, 0))
+  {
+    dwStatus = GetLastError();
+    fwprintf(stderr, L"CryptHashData failed: %d\n", dwStatus);
+    CryptReleaseContext(hProv, 0);
+    CryptDestroyHash(hHash);
+    return dwStatus;
+  }
+
+  cbHash = MD5LEN;
+  if (CryptGetHashParam(hHash, HP_HASHVAL, rgbHash, &cbHash, 0))
+  {
+    for (DWORD i = 0; i < cbHash; i++)
+    {
+      _snwprintf(
+          out,
+          2,
+          L"%c%c",
+          rgbDigits[rgbHash[i] >> 4],
+          rgbDigits[rgbHash[i] & 0xf]);
+      out += 2;
+    }
+  }
+  else
+  {
+    dwStatus = GetLastError();
+    fwprintf(stderr, L"CryptGetHashParam failed: %d\n", dwStatus);
+  }
+
+  CryptDestroyHash(hHash);
+  CryptReleaseContext(hProv, 0);
+  return dwStatus;
 }
 
 int wmain(int argc, const wchar_t **argv)
