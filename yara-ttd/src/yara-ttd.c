@@ -390,13 +390,13 @@ static int get_filenames_from_dir(
     SCAN_OPTIONS *scan_opts)
 {
   int result = ERROR_SUCCESS;
-  wchar_t path[MAX_PATH];
+  wchar_t path[MAX_PATH] = {0};
 
   // Create vect if it doesn't exist
   if (!filenames)
     vect_create(&filenames);
 
-  _snwprintf(path, MAX_PATH, L"%s\\*", dir);
+  _snwprintf(path, MAX_PATH, L"%s\\*\x00", dir);
   path[MAX_PATH - 1] = L'\0';
 
   WIN32_FIND_DATA FindFileData;
@@ -415,7 +415,7 @@ static int get_filenames_from_dir(
                       wcscmp(&FindFileData.cFileName[len - 4], L".err") == 0))
         continue;
 
-      _snwprintf(path, MAX_PATH, L"%s\\%s", dir, FindFileData.cFileName);
+      _snwprintf(path, MAX_PATH, L"%s\\%s\x00", dir, FindFileData.cFileName);
       path[MAX_PATH - 1] = L'\0';
 
       if (!(FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
@@ -427,10 +427,11 @@ static int get_filenames_from_dir(
 
         if (skip_larger > file_size.QuadPart || skip_larger <= 0)
         {
-          wchar_t *h_path = yr_calloc(wcslen(path), sizeof(wchar_t));
+          wchar_t *h_path = yr_calloc(MAX_PATH, sizeof(wchar_t));
           if (!h_path)
             return ERROR_INTERNAL_FATAL_ERROR;
 
+          memset(h_path, 0, MAX_PATH);
           wcscpy(h_path, path);
           result = vect_add_element(filenames, h_path);
         }
