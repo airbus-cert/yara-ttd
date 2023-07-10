@@ -285,7 +285,7 @@ args_option_t options[] = {
     OPT_BOOLEAN('g', L"print-tags", &show_tags, L"print tags"),
 
     OPT_BOOLEAN(
-        'r',
+        'R',
         L"recursive",
         &recursive_search,
         L"recursively search directories"),
@@ -332,7 +332,12 @@ args_option_t options[] = {
         L"abort scanning after the given number of SECONDS",
         L"SECONDS"),
 
-    OPT_BOOLEAN('v', L"version", &show_version, L"show version information"),
+    OPT_BOOLEAN(
+        'r',
+        L"record-trace",
+        &record_trace,
+        L"record a trace of the binary specified as argument and use it for "
+        L"the scan"),
 
     OPT_LONG(
         'm',
@@ -348,13 +353,6 @@ args_option_t options[] = {
         MAX_ARGS_SCAN_FUNCTION,
         L"function calls where you want to scan the trace",
         L"FUNCTION"),
-
-    OPT_BOOLEAN(
-        0,
-        L"record-trace",
-        &record_trace,
-        L"record a trace of the binary specified as argument and use it for "
-        L"the scan"),
 
     OPT_STRING_MULTI(
         't',
@@ -379,6 +377,8 @@ args_option_t options[] = {
         L"CURSOR_FILE"),
 
     OPT_STRING(0, L"cache", &cache_file, L"cache file", L"CACHE_FILE"),
+
+    OPT_BOOLEAN('v', L"version", &show_version, L"show version information"),
 
     OPT_END(),
 };
