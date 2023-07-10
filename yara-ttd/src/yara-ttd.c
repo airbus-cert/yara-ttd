@@ -144,6 +144,7 @@ static bool fast_scan = false;
 static bool negate = false;
 static bool print_count_only = false;
 static bool fail_on_warnings = false;
+static bool record_trace = false;
 static bool rules_are_compiled = false;
 static long total_count = 0;
 static long limit = 0;
@@ -347,6 +348,13 @@ args_option_t options[] = {
         MAX_ARGS_SCAN_FUNCTION,
         L"function calls where you want to scan the trace",
         L"FUNCTION"),
+
+    OPT_BOOLEAN(
+        0,
+        L"record-trace",
+        &record_trace,
+        L"record a trace of the binary specified as argument and use it for "
+        L"the scan"),
 
     OPT_STRING_MULTI(
         't',
@@ -1417,7 +1425,59 @@ int wmain(int argc, const wchar_t **argv)
 
   scan_opts.deadline = time(NULL) + timeout;
 
-  arg_is_dir = is_directory(argv[argc - 1]);
+  wchar_t path_to_scan[MAX_PATH] = {0};
+  if (record_trace)
+  {
+    wchar_t hash[MD5LEN * 2 + 1] = {0};
+    wchar_t data[MAX_PATH] = {0};
+    wchar_t cmd[MAX_PATH * 3] = {0};
+
+    const wchar_t *cmd_f = L"ttd.exe -out %s -children %s";
+
+    GetTempPath(MAX_PATH, path_to_scan);
+
+    srand((unsigned int) time(NULL));
+    _snwprintf(data, MAX_PATH, L"YRTTD%u\x00", rand());
+    int status = get_tmp_folder_name(hash, data, (DWORD) wcslen(data));
+    if (status != 0)
+    {
+      fwprintf(stderr, L"[ERROR] Failed to generate tmp folder name\n");
+      return status;
+    }
+
+    wcscat_s(path_to_scan, MAX_PATH, hash);
+    wprintf(L"Traces generated in %s", path_to_scan);
+
+    if (!CreateDirectory(path_to_scan, NULL))
+    {
+      fwprintf(stderr, L"[ERROR] Cannot create folder %s\n", path_to_scan);
+      return GetLastError();
+    }
+
+    _snwprintf(cmd, MAX_PATH * 3, cmd_f, path_to_scan, argv[argc - 1]);
+
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    ZeroMemory(&pi, sizeof(pi));
+    if (!CreateProcess(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+    {
+      fwprintf(stderr, L"[ERROR] CreateProcess ttd.exe failed.");
+      return EXIT_FAILURE;
+    }
+
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+  }
+  else
+  {
+    wcscpy(path_to_scan, argv[argc - 1]);
+  }
+
+  arg_is_dir = is_directory(path_to_scan);
 
   Vect *filenames = NULL;
   if (vect_create(&filenames) != ERROR_SUCCESS)
@@ -1433,7 +1493,7 @@ int wmain(int argc, const wchar_t **argv)
   }
   else if (arg_is_dir)
   {
-    if (get_filenames_from_dir(filenames, argv[argc - 1], &scan_opts) !=
+    if (get_filenames_from_dir(filenames, path_to_scan, &scan_opts) !=
         ERROR_SUCCESS)
     {
       fwprintf(stderr, L"[ERROR]: Cannot get filenames from directory.\n");
@@ -1442,8 +1502,7 @@ int wmain(int argc, const wchar_t **argv)
   }
   else if (scan_list_search)
   {
-    if (get_filenames_from_scan_list(filenames, argv[argc - 1]) !=
-        ERROR_SUCCESS)
+    if (get_filenames_from_scan_list(filenames, path_to_scan) != ERROR_SUCCESS)
     {
       fwprintf(stderr, L"[ERROR]: Cannot get filenames from directory.\n");
       exit_with_code(EXIT_FAILURE);
@@ -1451,8 +1510,9 @@ int wmain(int argc, const wchar_t **argv)
   }
   else
   {
-    wchar_t *filename = yr_calloc(wcslen(argv[argc - 1]) + 1, sizeof(wchar_t));
-    wcscpy(filename, argv[argc - 1]);
+    wchar_t *filename = yr_calloc(MAX_PATH, sizeof(wchar_t));
+    memset(filename, 0, MAX_PATH * sizeof(wchar_t));
+    wcscpy(filename, path_to_scan);
     if (vect_add_element(filenames, filename) != ERROR_SUCCESS)
     {
       fwprintf(stderr, L"[ERROR]: Cannot add filename to vector.\n");
