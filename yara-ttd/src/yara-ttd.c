@@ -27,9 +27,11 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <windows.h>
+
 #include <fcntl.h>
 #include <io.h>
-#include <windows.h>
+#include <wincrypt.h>
 
 #include <ctype.h>
 #include <libyarattd_common.h>
@@ -60,6 +62,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MAX_ARGS_EXT_VAR     32
 #define MAX_ARGS_MODULE_DATA 32
 #define MAX_QUEUED_FILES     64
+
+#define MD5LEN 16
 
 #define exit_with_code(code) \
   {                          \
@@ -140,6 +144,7 @@ static bool fast_scan = false;
 static bool negate = false;
 static bool print_count_only = false;
 static bool fail_on_warnings = false;
+static bool record_trace = false;
 static bool rules_are_compiled = false;
 static long total_count = 0;
 static long limit = 0;
@@ -280,7 +285,7 @@ args_option_t options[] = {
     OPT_BOOLEAN('g', L"print-tags", &show_tags, L"print tags"),
 
     OPT_BOOLEAN(
-        'r',
+        'R',
         L"recursive",
         &recursive_search,
         L"recursively search directories"),
@@ -327,7 +332,12 @@ args_option_t options[] = {
         L"abort scanning after the given number of SECONDS",
         L"SECONDS"),
 
-    OPT_BOOLEAN('v', L"version", &show_version, L"show version information"),
+    OPT_BOOLEAN(
+        'r',
+        L"record-trace",
+        &record_trace,
+        L"record a trace of the binary specified as argument and use it for "
+        L"the scan"),
 
     OPT_LONG(
         'm',
@@ -368,6 +378,8 @@ args_option_t options[] = {
 
     OPT_STRING(0, L"cache", &cache_file, L"cache file", L"CACHE_FILE"),
 
+    OPT_BOOLEAN('v', L"version", &show_version, L"show version information"),
+
     OPT_END(),
 };
 
@@ -390,13 +402,13 @@ static int get_filenames_from_dir(
     SCAN_OPTIONS *scan_opts)
 {
   int result = ERROR_SUCCESS;
-  wchar_t path[MAX_PATH];
+  wchar_t path[MAX_PATH] = {0};
 
   // Create vect if it doesn't exist
   if (!filenames)
     vect_create(&filenames);
 
-  _snwprintf(path, MAX_PATH, L"%s\\*", dir);
+  _snwprintf(path, MAX_PATH, L"%s\\*\x00", dir);
   path[MAX_PATH - 1] = L'\0';
 
   WIN32_FIND_DATA FindFileData;
@@ -415,7 +427,7 @@ static int get_filenames_from_dir(
                       wcscmp(&FindFileData.cFileName[len - 4], L".err") == 0))
         continue;
 
-      _snwprintf(path, MAX_PATH, L"%s\\%s", dir, FindFileData.cFileName);
+      _snwprintf(path, MAX_PATH, L"%s\\%s\x00", dir, FindFileData.cFileName);
       path[MAX_PATH - 1] = L'\0';
 
       if (!(FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
@@ -427,10 +439,11 @@ static int get_filenames_from_dir(
 
         if (skip_larger > file_size.QuadPart || skip_larger <= 0)
         {
-          wchar_t *h_path = yr_calloc(wcslen(path), sizeof(wchar_t));
+          wchar_t *h_path = yr_calloc(MAX_PATH, sizeof(wchar_t));
           if (!h_path)
             return ERROR_INTERNAL_FATAL_ERROR;
 
+          memset(h_path, 0, MAX_PATH);
           wcscpy(h_path, path);
           result = vect_add_element(filenames, h_path);
         }
@@ -1129,6 +1142,68 @@ static void unload_modules_data()
   modules_data_list = NULL;
 }
 
+int get_tmp_folder_name(WCHAR *out, WCHAR data[], DWORD len_data)
+{
+  int dwStatus = 0;
+  HCRYPTPROV hProv = 0;
+  HCRYPTHASH hHash = 0;
+  DWORD cbHash = 0;
+  WCHAR rgbDigits[] = L"0123456789abcdef";
+  BYTE rgbHash[MD5LEN];
+
+  // Get handle to the crypto provider
+  if (!CryptAcquireContext(
+          &hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
+  {
+    dwStatus = GetLastError();
+    fwprintf(stderr, L"CryptAcquireContext failed: %d\n", dwStatus);
+    return dwStatus;
+  }
+
+  if (!CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash))
+  {
+    dwStatus = GetLastError();
+    fwprintf(stderr, L"CryptAcquireContext failed: %d\n", dwStatus);
+    CryptReleaseContext(hProv, 0);
+    return dwStatus;
+  }
+
+  BYTE data_b[MAX_PATH] = {0};
+  wcstombs(data_b, data, len_data);
+  if (!CryptHashData(hHash, data_b, len_data, 0))
+  {
+    dwStatus = GetLastError();
+    fwprintf(stderr, L"CryptHashData failed: %d\n", dwStatus);
+    CryptReleaseContext(hProv, 0);
+    CryptDestroyHash(hHash);
+    return dwStatus;
+  }
+
+  cbHash = MD5LEN;
+  if (CryptGetHashParam(hHash, HP_HASHVAL, rgbHash, &cbHash, 0))
+  {
+    for (DWORD i = 0; i < cbHash; i++)
+    {
+      _snwprintf(
+          out,
+          2,
+          L"%c%c",
+          rgbDigits[rgbHash[i] >> 4],
+          rgbDigits[rgbHash[i] & 0xf]);
+      out += 2;
+    }
+  }
+  else
+  {
+    dwStatus = GetLastError();
+    fwprintf(stderr, L"CryptGetHashParam failed: %d\n", dwStatus);
+  }
+
+  CryptDestroyHash(hHash);
+  CryptReleaseContext(hProv, 0);
+  return dwStatus;
+}
+
 int wmain(int argc, const wchar_t **argv)
 {
   COMPILER_RESULTS cr;
@@ -1216,7 +1291,7 @@ int wmain(int argc, const wchar_t **argv)
 
   if (result != ERROR_SUCCESS)
   {
-    fprintf(stderr, "error: initialization error (%d)\n", result);
+    fprintf(stderr, "[ERROR] Initialization error (%d)\n", result);
     exit_with_code(EXIT_FAILURE);
   }
 
@@ -1256,7 +1331,7 @@ int wmain(int argc, const wchar_t **argv)
     {
       fprintf(
           stderr,
-          "error: can't accept multiple rules files if one of them is in "
+          "[ERROR] Can't accept multiple rules files if one of them is in "
           "compiled form.\n");
       exit_with_code(EXIT_FAILURE);
     }
@@ -1266,7 +1341,6 @@ int wmain(int argc, const wchar_t **argv)
     // yr_rules_load_stream for loading the rules from it.
 
     FILE *fh = _wfopen(argv[0], L"rb");
-
     if (fh != NULL)
     {
       YR_STREAM stream;
@@ -1350,7 +1424,59 @@ int wmain(int argc, const wchar_t **argv)
 
   scan_opts.deadline = time(NULL) + timeout;
 
-  arg_is_dir = is_directory(argv[argc - 1]);
+  wchar_t path_to_scan[MAX_PATH] = {0};
+  if (record_trace)
+  {
+    wchar_t hash[MD5LEN * 2 + 1] = {0};
+    wchar_t data[MAX_PATH] = {0};
+    wchar_t cmd[MAX_PATH * 3] = {0};
+
+    const wchar_t *cmd_f = L"ttd.exe -out %s -children %s";
+
+    GetTempPath(MAX_PATH, path_to_scan);
+
+    srand((unsigned int) time(NULL));
+    _snwprintf(data, MAX_PATH, L"YRTTD%u\x00", rand());
+    int status = get_tmp_folder_name(hash, data, (DWORD) wcslen(data));
+    if (status != 0)
+    {
+      fwprintf(stderr, L"[ERROR] Failed to generate tmp folder name\n");
+      return status;
+    }
+
+    wcscat_s(path_to_scan, MAX_PATH, hash);
+    wprintf(L"Traces generated in %s", path_to_scan);
+
+    if (!CreateDirectory(path_to_scan, NULL))
+    {
+      fwprintf(stderr, L"[ERROR] Cannot create folder %s\n", path_to_scan);
+      return GetLastError();
+    }
+
+    _snwprintf(cmd, MAX_PATH * 3, cmd_f, path_to_scan, argv[argc - 1]);
+
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    ZeroMemory(&pi, sizeof(pi));
+    if (!CreateProcess(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+    {
+      fwprintf(stderr, L"[ERROR] CreateProcess ttd.exe failed.");
+      return EXIT_FAILURE;
+    }
+
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+  }
+  else
+  {
+    wcscpy(path_to_scan, argv[argc - 1]);
+  }
+
+  arg_is_dir = is_directory(path_to_scan);
 
   Vect *filenames = NULL;
   if (vect_create(&filenames) != ERROR_SUCCESS)
@@ -1366,7 +1492,7 @@ int wmain(int argc, const wchar_t **argv)
   }
   else if (arg_is_dir)
   {
-    if (get_filenames_from_dir(filenames, argv[argc - 1], &scan_opts) !=
+    if (get_filenames_from_dir(filenames, path_to_scan, &scan_opts) !=
         ERROR_SUCCESS)
     {
       fwprintf(stderr, L"[ERROR]: Cannot get filenames from directory.\n");
@@ -1375,8 +1501,7 @@ int wmain(int argc, const wchar_t **argv)
   }
   else if (scan_list_search)
   {
-    if (get_filenames_from_scan_list(filenames, argv[argc - 1]) !=
-        ERROR_SUCCESS)
+    if (get_filenames_from_scan_list(filenames, path_to_scan) != ERROR_SUCCESS)
     {
       fwprintf(stderr, L"[ERROR]: Cannot get filenames from directory.\n");
       exit_with_code(EXIT_FAILURE);
@@ -1384,8 +1509,9 @@ int wmain(int argc, const wchar_t **argv)
   }
   else
   {
-    wchar_t *filename = yr_calloc(wcslen(argv[argc - 1]) + 1, sizeof(wchar_t));
-    wcscpy(filename, argv[argc - 1]);
+    wchar_t *filename = yr_calloc(MAX_PATH, sizeof(wchar_t));
+    memset(filename, 0, MAX_PATH * sizeof(wchar_t));
+    wcscpy(filename, path_to_scan);
     if (vect_add_element(filenames, filename) != ERROR_SUCCESS)
     {
       fwprintf(stderr, L"[ERROR]: Cannot add filename to vector.\n");

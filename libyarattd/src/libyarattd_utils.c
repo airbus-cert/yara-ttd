@@ -115,7 +115,8 @@ int check_idx_file(const wchar_t* filename)
   if (len < 3)
     return ERROR_COULD_NOT_OPEN_FILE;
 
-  wchar_t* idx_path = (wchar_t*) yr_calloc(len, sizeof(wchar_t));
+  wchar_t* idx_path = (wchar_t*) yr_calloc(MAX_PATH, sizeof(wchar_t));
+  memset(idx_path, 0, MAX_PATH);
   wcscpy(idx_path, filename);
   idx_path[len - 3] = L'i';
   idx_path[len - 2] = L'd';
